@@ -539,7 +539,11 @@ def main():
         code = f.read()
     ag = AntlrG(code)
     for elt in ag.res:
-        print(elt)
+        key = elt[0]
+        defs = elt[1]
+        print(key)
+        for rule in defs:
+            print('  ', rule)
 
 if __name__ == '__main__':
     main()
