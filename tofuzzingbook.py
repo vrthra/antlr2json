@@ -538,7 +538,8 @@ def main():
     with open(sys.argv[1], 'r') as f:
         code = f.read()
     ag = AntlrG(code)
-    print(ag.res)
+    for elt in ag.res:
+        print(elt)
 
 if __name__ == '__main__':
     main()
