@@ -109,7 +109,7 @@ class AntlrG:
         #tree.toStringTree(recog=self.parser)
 
     def parse_LEXER_CHAR_SET(self, obj):
-        return obj.symbol.text
+        return ('charset', obj.symbol.text)
 
     def parse_COMMA(self, obj):
         assert obj.symbol.text == ','
@@ -385,6 +385,19 @@ class AntlrG:
             return self.parse_characterRange(c)
         else:
             assert False
+
+    def parse_characterRange(self, obj):
+        '''
+        characterRange
+           : STRING_LITERAL RANGE STRING_LITERAL
+           ;
+        '''
+        _o, children = self._parse_token(children, self.lexer.STRING_LITERAL)
+        a = self.parse_STRING_LITERAL(_o)
+        _o, children = self._parse_token(children, self.lexer.RANGE)
+        _o, children = self._parse_token(children, self.lexer.STRING_LITERAL)
+        b = self.parse_STRING_LITERAL(_o)
+        return ('charrange', a, b)
 
     def parse_ebnf(self, obj):
         '''
