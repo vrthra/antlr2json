@@ -4,6 +4,15 @@ from ANTLRv4Parser import ANTLRv4Parser
 import sys
 import copy
 
+EBNF = {}
+Counter = 0
+
+def nxt_sym(prefix):
+    global Counter
+    r = Counter
+    Counter += 1
+    return '%s_%d' % (prefix, r)
+
 
 class AntlrG:
     def __init__(self, code):
@@ -346,7 +355,12 @@ class AntlrG:
                 # return [le, ebnf]
             return le
         elif isinstance(c, ANTLRv4Parser.EbnfContext):
-            return self.parse_ebnf(c)
+            blk, blksuffix = self.parse_ebnf(c)
+            #sym = '<%s_%s>' % (nxt_sym('element'), blksuffix)
+            #EBNF[sym] = [blk, blksuffix]
+            #return sym
+            return (blksuffix, blk)
+
         elif isinstance(c, ANTLRv4Parser.ActionBlockContext):
             raise NotImplemented()
         else:
@@ -391,13 +405,14 @@ class AntlrG:
         children = copy.copy(obj.children)
         _o, children = self._parse_object(children, ANTLRv4Parser.BlockContext)
         v = self.parse_block(_o)
+
         _o, children = self._parse_question_object(children, ANTLRv4Parser.BlockSuffixContext)
         if _o:
             v1 = self.parse_blockSuffix(_o[0])
-            # v1 could be * + or ?
+            # v1 could be *, +, ?, *?, +?, or ??
             return [v, v1]
         assert False
-        return [v]
+        return [v, None]
 
     def parse_blockSuffix(self, obj):
         '''
@@ -443,7 +458,52 @@ class AntlrG:
            : LPAREN (optionsSpec? ruleAction* COLON)? altList RPAREN
         ;
         '''
-        return '<block: todo>'
+        children = copy.copy(obj.children)
+        _o, children = self._parse_token(children, self.lexer.LPAREN)
+
+        def pred_inside(children_):
+            children = copy.copy(children_)
+            _o1, children = self._parse_question_object(children, ANTLRv4Parser.OptionsSpecContext)
+            assert not _o1
+            _o2, children = self._parse_star_object(children, ANTLRv4Parser.RuleActionContext)
+            assert not _o2
+            _o3, children = self._parse_question_token(children, self.lexer.COLON)
+            if not _o3:
+                return None, children_
+            o = _o3[0]
+            return o, children
+
+        res, children = self._parse_question_x(children, pred_inside)
+        assert not res
+        altlst, children = self._parse_object(children, ANTLRv4Parser.AltListContext)
+        _o, children = self._parse_token(children, self.lexer.RPAREN)
+        res = self.parse_altList(altlst)
+        return res
+
+    def parse_altList(self, obj):
+        '''
+        altList
+           : alternative (OR alternative)*
+           ;
+        '''
+        children = copy.copy(obj.children)
+        alt, children = self._parse_object(children, ANTLRv4Parser.AlternativeContext)
+
+        # a single production rule
+        def pred_inside(children):
+            _o, children = self._parse_question_token(children, self.lexer.OR)
+            if _o is None: return None
+            _o, children = self._parse_object(children, ANTLRv4Parser.AlternativeContext)
+            assert _o is not None
+            return _o, children
+
+        alts, children = self._parse_star_x(children, pred_inside)
+        altlst = [alt]  + alts
+        res = []
+        for a in altlst:
+            r = self.parse_alternative(a)
+            res.append(r)
+        return ('or', res)
 
     def parse_atom(self, obj):
         '''
@@ -549,6 +609,7 @@ class AntlrG:
         if isinstance(nxt, ANTLRv4Parser.AtomContext):
             res = self.parse_atom(nxt)
         elif isinstance(nxt, ANTLRv4Parser.BlockContext):
+            assert False
             res = self.parse_block(nxt)
         else:
             assert False
@@ -699,7 +760,7 @@ class AntlrG:
            ;
         '''
         # a single production rule
-        def pred_inside(children_):
+        def pred_inside(children):
             _o, children = self._parse_question_token(children, self.lexer.COMMA)
             if _o is None: return None
             self.parse_COMMA(_o[0])
@@ -887,6 +948,21 @@ def main():
         print(key)
         for rule in defs:
             print('  ', rule)
+
+    # now print ebnf blocks
+    #for k in EBNF:
+    #    print(k)
+    #    e, rep = EBNF[k]
+    #    if rep == '*':
+    #        e.append(k)
+    #        print('  ', e)
+    #        print('  ', [])
+    #    elif rep == '+':
+    #        print('  ', e)
+    #    elif rep == '?':
+    #        print('  ', e)
+    #    else:
+    #        assert False
 
 if __name__ == '__main__':
     main()
