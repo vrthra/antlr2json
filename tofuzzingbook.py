@@ -871,9 +871,14 @@ class AntlrG:
         elif isinstance(c, ANTLRv4Parser.LexerAtomContext):
             ebnf_suffix, children = self._parse_question_object(children, ANTLRv4Parser.EbnfSuffixContext)
             assert not children
-            ebnf = None if not ebnf_suffix else [self.parse_ebnfSuffix(ebnf_suffix[0])]
+            ebnfs = [self.parse_ebnfSuffix(e) for e in ebnf_suffix]
             res = self.parse_lexerAtom(c)
-            return (res, ebnf)
+            if ebnfs:
+                e = ebnfs.pop(0)
+                assert e in {'*', '?', '+'}
+                return (e, res)
+            else:
+                return res
         elif isinstance(c, ANTLRv4Parser.ActionBlockContext):
             assert not children
             return self.parse_actionBlock(c)
