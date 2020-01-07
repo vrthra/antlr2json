@@ -201,6 +201,7 @@ class AntlrG:
            : ruleAltList
            ;
         '''
+        # a define with multiple rules
         _o, children = self._parse_object(copy.copy(rb.children), ANTLRv4Parser.RuleAltListContext)
         assert not children
         return self.parse_ruleAltList(_o)
@@ -211,6 +212,7 @@ class AntlrG:
            : labeledAlt (OR labeledAlt)*
            ;
         '''
+        # a define with multiple rules
         def pred_inside(children):
             _o, children = self._parse_question_token(children, self.lexer.OR)
             if _o is None: return None
@@ -238,6 +240,7 @@ class AntlrG:
            : alternative (POUND identifier)?
            ;
         '''
+        # a single production rule
         def pred_inside(children_):
             _o, children = self._parse_question_token(children, self.lexer.POUND)
             if _o is None: return None
@@ -261,6 +264,7 @@ class AntlrG:
            // explicitly allow empty alts
            ;
         '''
+        # a single production rule (or empty)
         children = obj.children
         if not children:
             return []
@@ -282,22 +286,29 @@ class AntlrG:
            | actionBlock QUESTION?
            ;
         '''
+        # a single token
+        # By the fuzzingbook canonical format, this should return a single token
+        # not an array. So we have to figure out what happens when there is an
+        # ebnfSuffix
         children = copy.copy(obj.children)
         c = children[0]
         if isinstance(c, ANTLRv4Parser.LabeledElementContext):
+            assert False
             le = self.parse_labeledElement(c)
             ebnf = None
             if len(children) > 1:
                 ebnf = self.parse_ebnfSuffix(children[1])
-                return [le, ebnf]
-            return [le]
+                assert False
+                # return [le, ebnf]
+            return le
         elif isinstance(c, ANTLRv4Parser.AtomContext):
             le = self.parse_atom(c)
             ebnf = None
             if len(children) > 1:
                 ebnf = self.parse_ebnfSuffix(children[1])
-                return [le, ebnf]
-            return [le]
+                assert False
+                # return [le, ebnf]
+            return le
         elif isinstance(c, ANTLRv4Parser.EbnfContext):
             return self.parse_ebnf(c)
         elif isinstance(c, ANTLRv4Parser.ActionBlockContext):
