@@ -85,7 +85,10 @@ def process_CHARSET(val, jval):
         else:
             first_part = val[:v-1] # v-1 is the start char of range
             # v + 1 is the end char of range
-            return process_chars(first_part) + process_range(val[v-1], val[v+1]) + process_CHARSET(val[v+2:], jval)
+            fs = ''
+            if first_part:
+                fs = process_chars(first_part)
+            return  fs + process_range(val[v-1], val[v+1]) + process_CHARSET(val[v+2:], jval)
 
 def process_chars(chars):
     return '[%s]' % chars
