@@ -91,7 +91,7 @@ def process_chars(chars):
     return '[%s]' % chars
 
 def process_range(a, b):
-    return '[%s-%s]' % (a, b)
+    return '[%s]' % ''.join([chr(c) for c in range(ord(a), ord(b)+1)])
 
 def process_re(regex, jval):
     # return of process_re will be a token
