@@ -382,9 +382,12 @@ class AntlrG:
            | DOT elementOptions?
            ;
         '''
+        # A single token -- can be a terminal or a nonterminal
         children = obj.children
         c = children[0]
         if isinstance(c, ANTLRv4Parser.TerminalContext):
+            # note: this may simply be a parser terminal. It does
+            # not mean that it is a lexer terminal
             return self.parse_terminal(c)
         elif isinstance(c, ANTLRv4Parser.RulerefContext):
             return self.parse_ruleref(c)
@@ -417,7 +420,10 @@ class AntlrG:
         else:
             assert False
 
-    def parse_STRING_LITERAL(self, obj): return obj.symbol.text
+    def parse_STRING_LITERAL(self, obj):
+        v = obj.symbol.text
+        assert (v[0], v[-1]) == ("'","'")
+        return v[1:-1]
 
     def parse_ruleref(self, obj):
         '''
@@ -475,7 +481,9 @@ class AntlrG:
         else:
             assert False
 
-    def parse_RULE_REF(self, obj): return obj.symbol.text
+    def parse_RULE_REF(self, obj):
+        v = obj.symbol.text
+        return '<%s>' % v
 
     def parse_TOKEN_REF(self, obj): return obj.symbol.text
 
