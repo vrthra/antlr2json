@@ -4,16 +4,6 @@ from ANTLRv4Parser import ANTLRv4Parser
 import sys
 import copy
 
-EBNF = {}
-Counter = 0
-
-def nxt_sym(prefix):
-    global Counter
-    r = Counter
-    Counter += 1
-    return '%s_%d' % (prefix, r)
-
-
 class AntlrG:
     def __init__(self, code):
         self.lexer = ANTLRv4Lexer(InputStream(code))
@@ -101,16 +91,16 @@ class AntlrG:
         _o, children = self._parse_star_token(children, self.lexer.DOC_COMMENT)
         self.parse_DOC_COMMENT_star(_o)
 
-        _o, children = self._parse_object(children, ANTLRv4Parser.GrammarDeclContext)
+        _o, children = self._parse_object(children, self.parser.GrammarDeclContext)
         self.parse_grammarDecl(_o)
 
-        _o, children = self._parse_star_object(children, ANTLRv4Parser.PrequelConstructContext)
+        _o, children = self._parse_star_object(children, self.parser.PrequelConstructContext)
         self.parse_prequelConstruct_star(_o)
 
-        rules, children = self._parse_object(children, ANTLRv4Parser.RulesContext)
+        rules, children = self._parse_object(children, self.parser.RulesContext)
         rules_json = self.parse_rules(rules)
 
-        _o, children = self._parse_star_object(children, ANTLRv4Parser.ModeSpecContext)
+        _o, children = self._parse_star_object(children, self.parser.ModeSpecContext)
         self.parse_modeSpec_star(_o)
 
         _o, children = self._parse_token(children, self.parser.EOF)
@@ -202,9 +192,9 @@ class AntlrG:
         children = ruleSpec.children
         assert len(children) == 1
         rspec = children[0]
-        if isinstance(rspec, ANTLRv4Parser.ParserRuleSpecContext):
+        if isinstance(rspec, self.parser.ParserRuleSpecContext):
             return self.parse_parserRuleSpec(rspec)
-        elif isinstance(rspec, ANTLRv4Parser.LexerRuleSpecContext):
+        elif isinstance(rspec, self.parser.LexerRuleSpecContext):
             return self.parse_lexerRuleSpec(rspec)
         else:
             assert False
@@ -221,24 +211,24 @@ class AntlrG:
         _o, children = self._parse_star_token(children, self.lexer.DOC_COMMENT)
         self.parse_DOC_COMMENT_star(_o)
 
-        _o, children = self._parse_question_object(children, ANTLRv4Parser.RuleModifiersContext) # a maximum of one
+        _o, children = self._parse_question_object(children, self.parser.RuleModifiersContext) # a maximum of one
         self.parse_ruleModifiers_question(_o)
 
         _o, children = self._parse_token(children, self.lexer.RULE_REF)
         rule_name = self.parse_RULE_REF(_o)
 
-        _o, children = self._parse_question_object(children, ANTLRv4Parser.ArgActionBlockContext)
-        _o, children = self._parse_question_object(children, ANTLRv4Parser.RuleReturnsContext)
-        _o, children = self._parse_question_object(children, ANTLRv4Parser.ThrowsSpecContext)
-        _o, children = self._parse_question_object(children, ANTLRv4Parser.LocalsSpecContext)
-        _o, children = self._parse_star_object(children, ANTLRv4Parser.RulePrequelContext)
+        _o, children = self._parse_question_object(children, self.parser.ArgActionBlockContext)
+        _o, children = self._parse_question_object(children, self.parser.RuleReturnsContext)
+        _o, children = self._parse_question_object(children, self.parser.ThrowsSpecContext)
+        _o, children = self._parse_question_object(children, self.parser.LocalsSpecContext)
+        _o, children = self._parse_star_object(children, self.parser.RulePrequelContext)
 
         _o, children = self._parse_token(children, self.lexer.COLON)
-        _o, children = self._parse_object(children, ANTLRv4Parser.RuleBlockContext)
+        _o, children = self._parse_object(children, self.parser.RuleBlockContext)
         defines = self.parse_ruleBlock(_o)
 
         _o, children = self._parse_token(children, self.lexer.SEMI)
-        _o, children = self._parse_object(children, ANTLRv4Parser.ExceptionGroupContext)
+        _o, children = self._parse_object(children, self.parser.ExceptionGroupContext)
 
         return [rule_name, defines]
 
@@ -250,7 +240,7 @@ class AntlrG:
            ;
         '''
         # a define with multiple rules
-        _o, children = self._parse_object(copy.copy(rb.children), ANTLRv4Parser.RuleAltListContext)
+        _o, children = self._parse_object(copy.copy(rb.children), self.parser.RuleAltListContext)
         assert not children
         return self.parse_ruleAltList(_o)
 
@@ -264,7 +254,7 @@ class AntlrG:
         def pred_inside(children):
             _o, children = self._parse_question_token(children, self.lexer.OR)
             if _o is None: return None
-            _o, children = self._parse_object(children, ANTLRv4Parser.LabeledAltContext)
+            _o, children = self._parse_object(children, self.parser.LabeledAltContext)
 
             # labeledAlt can be empty TODO.
             assert _o is not None
@@ -292,12 +282,12 @@ class AntlrG:
         def pred_inside(children_):
             _o, children = self._parse_question_token(children, self.lexer.POUND)
             if _o is None: return None
-            _o, children = self._parse_object(children, ANTLRv4Parser.IdentifierContext)
+            _o, children = self._parse_object(children, self.parser.IdentifierContext)
             assert _o is not None
             return _o, children
 
         children = obj.children
-        ac, children = self._parse_object(children, ANTLRv4Parser.AlternativeContext)
+        ac, children = self._parse_object(children, self.parser.AlternativeContext)
         acr =  self.parse_alternative(ac)
         res, children = self._parse_question_x(children, pred_inside)
 
@@ -316,8 +306,8 @@ class AntlrG:
         children = obj.children
         if not children:
             return []
-        _o, children = self._parse_question_object(children, ANTLRv4Parser.ElementOptionsContext)
-        elts, children = self._parse_star_object(children, ANTLRv4Parser.ElementContext)
+        _o, children = self._parse_question_object(children, self.parser.ElementOptionsContext)
+        elts, children = self._parse_star_object(children, self.parser.ElementContext)
         assert len(elts) >= 1 # element+
         res = []
         for e in elts:
@@ -340,7 +330,7 @@ class AntlrG:
         # ebnfSuffix
         children = copy.copy(obj.children)
         c = children[0]
-        if isinstance(c, ANTLRv4Parser.LabeledElementContext):
+        if isinstance(c, self.parser.LabeledElementContext):
             assert False
             le = self.parse_labeledElement(c)
             ebnf = None
@@ -349,7 +339,7 @@ class AntlrG:
                 assert False
                 # return [le, ebnf]
             return le
-        elif isinstance(c, ANTLRv4Parser.AtomContext):
+        elif isinstance(c, self.parser.AtomContext):
             le = self.parse_atom(c)
             ebnf = None
             if len(children) > 1:
@@ -357,14 +347,11 @@ class AntlrG:
                 assert False
                 # return [le, ebnf]
             return le
-        elif isinstance(c, ANTLRv4Parser.EbnfContext):
+        elif isinstance(c, self.parser.EbnfContext):
             blk, blksuffix = self.parse_ebnf(c)
-            #sym = '<%s_%s>' % (nxt_sym('element'), blksuffix)
-            #EBNF[sym] = [blk, blksuffix]
-            #return sym
             return (blksuffix, blk)
 
-        elif isinstance(c, ANTLRv4Parser.ActionBlockContext):
+        elif isinstance(c, self.parser.ActionBlockContext):
             raise NotImplemented()
         else:
             assert False
@@ -393,7 +380,7 @@ class AntlrG:
             else:
                 assert False
 
-        elif isinstance(c, ANTLRv4Parser.CharacterRangeContext):
+        elif isinstance(c, self.parser.CharacterRangeContext):
             assert not children
             return self.parse_characterRange(c)
         else:
@@ -406,10 +393,10 @@ class AntlrG:
            ;
         '''
         children = copy.copy(obj.children)
-        _o, children = self._parse_object(children, ANTLRv4Parser.BlockContext)
+        _o, children = self._parse_object(children, self.parser.BlockContext)
         v = self.parse_block(_o)
 
-        _o, children = self._parse_question_object(children, ANTLRv4Parser.BlockSuffixContext)
+        _o, children = self._parse_question_object(children, self.parser.BlockSuffixContext)
         if _o:
             v1 = self.parse_blockSuffix(_o[0])
             # v1 could be *, +, ?, *?, +?, or ??
@@ -424,7 +411,7 @@ class AntlrG:
            ;
         '''
         children = obj.children
-        _o, children = self._parse_object(children, ANTLRv4Parser.EbnfSuffixContext)
+        _o, children = self._parse_object(children, self.parser.EbnfSuffixContext)
         assert not children
         return self.parse_ebnfSuffix(_o)
 
@@ -466,9 +453,9 @@ class AntlrG:
 
         def pred_inside(children_):
             children = copy.copy(children_)
-            _o1, children = self._parse_question_object(children, ANTLRv4Parser.OptionsSpecContext)
+            _o1, children = self._parse_question_object(children, self.parser.OptionsSpecContext)
             assert not _o1
-            _o2, children = self._parse_star_object(children, ANTLRv4Parser.RuleActionContext)
+            _o2, children = self._parse_star_object(children, self.parser.RuleActionContext)
             assert not _o2
             _o3, children = self._parse_question_token(children, self.lexer.COLON)
             if not _o3:
@@ -478,7 +465,7 @@ class AntlrG:
 
         res, children = self._parse_question_x(children, pred_inside)
         assert not res
-        altlst, children = self._parse_object(children, ANTLRv4Parser.AltListContext)
+        altlst, children = self._parse_object(children, self.parser.AltListContext)
         _o, children = self._parse_token(children, self.lexer.RPAREN)
         res = self.parse_altList(altlst)
         return res
@@ -490,13 +477,13 @@ class AntlrG:
            ;
         '''
         children = copy.copy(obj.children)
-        alt, children = self._parse_object(children, ANTLRv4Parser.AlternativeContext)
+        alt, children = self._parse_object(children, self.parser.AlternativeContext)
 
         # a single production rule
         def pred_inside(children):
             _o, children = self._parse_question_token(children, self.lexer.OR)
             if _o is None: return None
-            _o, children = self._parse_object(children, ANTLRv4Parser.AlternativeContext)
+            _o, children = self._parse_object(children, self.parser.AlternativeContext)
             assert _o is not None
             return _o, children
 
@@ -520,13 +507,13 @@ class AntlrG:
         # A single token -- can be a terminal or a nonterminal
         children = obj.children
         c = children[0]
-        if isinstance(c, ANTLRv4Parser.TerminalContext):
+        if isinstance(c, self.parser.TerminalContext):
             # note: this may simply be a parser terminal. It does
             # not mean that it is a lexer terminal
             return self.parse_terminal(c)
-        elif isinstance(c, ANTLRv4Parser.RulerefContext):
+        elif isinstance(c, self.parser.RulerefContext):
             return self.parse_ruleref(c)
-        elif isinstance(c, ANTLRv4Parser.NotSetContext):
+        elif isinstance(c, self.parser.NotSetContext):
             return self.parse_notSet(c)
         else:
             assert isinstance(c, tree.Tree.TerminalNodeImpl)
@@ -544,10 +531,10 @@ class AntlrG:
         self.parse_NOT(_o)
         c = children.pop(0)
         assert not children
-        if isinstance(c, ANTLRv4Parser.SetElementContext):
+        if isinstance(c, self.parser.SetElementContext):
             v = self.parse_setElement(c)
             return ('not', v)
-        elif isinstance(c, ANTLRv4Parser.BlockSetContext):
+        elif isinstance(c, self.parser.BlockSetContext):
             v = self.parse_blockSet(c)
             return ('not', v)
         else: assert False
@@ -564,12 +551,12 @@ class AntlrG:
         assert isinstance(c, tree.Tree.TerminalNodeImpl)
         if c.symbol.type == self.lexer.TOKEN_REF:
             v = self.parse_RULE_REF(c)
-            _o, children = self._parse_question_object(children, ANTLRv4Parser.ElementOptionsContext)
+            _o, children = self._parse_question_object(children, self.parser.ElementOptionsContext)
             assert not _o
             return v
         elif c.symbol.type == self.lexer.STRING_LITERAL:
             v = self.parse_STRING_LITERAL(c)
-            _o, children = self._parse_question_object(children, ANTLRv4Parser.ElementOptionsContext)
+            _o, children = self._parse_question_object(children, self.parser.ElementOptionsContext)
             assert not _o
             return v
         else:
@@ -589,9 +576,9 @@ class AntlrG:
         children = obj.children
         _o, children = self._parse_token(children, self.lexer.RULE_REF)
         v = self.parse_RULE_REF(_o)
-        _o, children = self._parse_question_object(children, ANTLRv4Parser.ArgActionBlockContext)
+        _o, children = self._parse_question_object(children, self.parser.ArgActionBlockContext)
         assert not _o
-        _o, children = self._parse_question_object(children, ANTLRv4Parser.ElementOptionsContext)
+        _o, children = self._parse_question_object(children, self.parser.ElementOptionsContext)
         assert not _o
         assert not children
         return v
@@ -603,15 +590,15 @@ class AntlrG:
            ;
         '''
         children = copy.copy(obj.children)
-        _o, children = self._parse_object(children, ANTLRv4Parser.IdentifierContext)
+        _o, children = self._parse_object(children, self.parser.IdentifierContext)
         o = self.parse_identifier(_o)
         assign = children.pop(0)
         assert isinstance(assign, tree.Tree.TerminalNodeImpl)
         nxt = children.pop(0)
         res = None
-        if isinstance(nxt, ANTLRv4Parser.AtomContext):
+        if isinstance(nxt, self.parser.AtomContext):
             res = self.parse_atom(nxt)
-        elif isinstance(nxt, ANTLRv4Parser.BlockContext):
+        elif isinstance(nxt, self.parser.BlockContext):
             assert False
             res = self.parse_block(nxt)
         else:
@@ -695,7 +682,7 @@ class AntlrG:
 
         _o, children = self._parse_token(children, self.lexer.COLON)
 
-        _o, children = self._parse_object(children, ANTLRv4Parser.LexerRuleBlockContext)
+        _o, children = self._parse_object(children, self.parser.LexerRuleBlockContext)
         tdef = self.parse_lexerRuleBlock(_o)
 
         _o, children = self._parse_token(children, self.lexer.SEMI)
@@ -708,7 +695,7 @@ class AntlrG:
            : lexerAltList
            ;
         '''
-        altlst, children = self._parse_object(copy.copy(obj.children), ANTLRv4Parser.LexerAltListContext)
+        altlst, children = self._parse_object(copy.copy(obj.children), self.parser.LexerAltListContext)
         assert not children
         res = self.parse_lexerAltList(altlst)
         return res
@@ -723,7 +710,7 @@ class AntlrG:
         def pred_inside(children):
             _o, children = self._parse_question_token(children, self.lexer.OR)
             if _o is None: return None
-            _o, children = self._parse_object(children, ANTLRv4Parser.LexerAltContext)
+            _o, children = self._parse_object(children, self.parser.LexerAltContext)
             assert _o is not None
             return _o, children
 
@@ -749,9 +736,9 @@ class AntlrG:
         '''
         cs = copy.copy(obj.children)
         if not cs: return []
-        _o, children = self._parse_object(cs, ANTLRv4Parser.LexerElementsContext)
+        _o, children = self._parse_object(cs, self.parser.LexerElementsContext)
         v = self.parse_lexerElements(_o)
-        _o, children = self._parse_question_object(cs, ANTLRv4Parser.LexerCommandsContext)
+        _o, children = self._parse_question_object(cs, self.parser.LexerCommandsContext)
         if _o:
             self.parse_lexerCommands(_o[0])
         return v
@@ -767,14 +754,14 @@ class AntlrG:
             _o, children = self._parse_question_token(children, self.lexer.COMMA)
             if _o is None: return None
             self.parse_COMMA(_o[0])
-            _o, children = self._parse_object(children, ANTLRv4Parser.LexerCommandContext)
+            _o, children = self._parse_object(children, self.parser.LexerCommandContext)
             assert _o is not None
             return _o
 
         children = copy.copy(obj.children)
         _o, children = self._parse_token(children, self.lexer.RARROW)
         self.parse_RARROW(_o)
-        _o, children = self._parse_object(children, ANTLRv4Parser.LexerCommandContext)
+        _o, children = self._parse_object(children, self.parser.LexerCommandContext)
         lcommands = [_o]
 
         res, children = self._parse_star_x(children, pred_inside)
@@ -794,7 +781,7 @@ class AntlrG:
            ;
         '''
         children = copy.copy(obj.children)
-        cn, children = self._parse_object(children, ANTLRv4Parser.LexerCommandNameContext)
+        cn, children = self._parse_object(children, self.parser.LexerCommandNameContext)
         cname = self.parse_lexerCommandName(cn)
         if not children:
             return cname
@@ -802,7 +789,7 @@ class AntlrG:
         assert False
         _o, children = self._parse_token(children, self.lexer.LPAREN)
         self.parse_LPAREN(_o)
-        ce, children = self._parse_object(children, ANTLRv4Parser.LexerCommandExprContext)
+        ce, children = self._parse_object(children, self.parser.LexerCommandExprContext)
         _o, children = self._parse_token(children, self.lexer.RPAREN)
         self.parse_RPAREN(_o)
         assert not children
@@ -820,8 +807,8 @@ class AntlrG:
         '''
         children = copy.copy(obj.children)
         c = children[0]
-        if isinstance(c, ANTLRv4Parser.IdentifierContext):
-            _o, children = self._parse_object(children, ANTLRv4Parser.IdentifierContext)
+        if isinstance(c, self.parser.IdentifierContext):
+            _o, children = self._parse_object(children, self.parser.IdentifierContext)
             assert not children
             return self.parse_identifier(_o)
         elif isinstance(c, tree.Tree.TerminalNodeImpl):
@@ -849,7 +836,7 @@ class AntlrG:
            : lexerElement+
            ;
         '''
-        _o, children = self._parse_star_object(copy.copy(obj.children), ANTLRv4Parser.LexerElementContext)
+        _o, children = self._parse_star_object(copy.copy(obj.children), self.parser.LexerElementContext)
         assert len(_o) > 0 # plus
         res = []
         for val in _o:
@@ -868,11 +855,11 @@ class AntlrG:
         '''
         children = copy.copy(obj.children)
         c = children.pop(0)
-        if isinstance(c, ANTLRv4Parser.LabeledLexerElementContext):
+        if isinstance(c, self.parser.LabeledLexerElementContext):
             assert not children
             return self.parse_labeledLexerElement(c)
-        elif isinstance(c, ANTLRv4Parser.LexerAtomContext):
-            ebnf_suffix, children = self._parse_question_object(children, ANTLRv4Parser.EbnfSuffixContext)
+        elif isinstance(c, self.parser.LexerAtomContext):
+            ebnf_suffix, children = self._parse_question_object(children, self.parser.EbnfSuffixContext)
             assert not children
             ebnfs = [self.parse_ebnfSuffix(e) for e in ebnf_suffix]
             res = self.parse_lexerAtom(c)
@@ -882,11 +869,11 @@ class AntlrG:
                 return (e, res)
             else:
                 return res
-        elif isinstance(c, ANTLRv4Parser.ActionBlockContext):
+        elif isinstance(c, self.parser.ActionBlockContext):
             assert not children
             return self.parse_actionBlock(c)
-        elif isinstance(c, ANTLRv4Parser.LexerBlockContext):
-            ebnf_suffix, children = self._parse_question_object(children, ANTLRv4Parser.EbnfSuffixContext)
+        elif isinstance(c, self.parser.LexerBlockContext):
+            ebnf_suffix, children = self._parse_question_object(children, self.parser.EbnfSuffixContext)
             assert not children
             res = self.parse_lexerBlock(c)
             ebnfs = [self.parse_ebnfSuffix(e) for e in ebnf_suffix]
@@ -907,7 +894,7 @@ class AntlrG:
         children = copy.copy(obj.children)
         lparen, children = self._parse_token(children, self.lexer.LPAREN)
         self.parse_LPAREN(lparen)
-        lalts, children = self._parse_object(children, ANTLRv4Parser.LexerAltListContext)
+        lalts, children = self._parse_object(children, self.parser.LexerAltListContext)
         res = self.parse_lexerAltList(lalts)
         rparen, children = self._parse_token(children, self.lexer.RPAREN)
         self.parse_RPAREN(rparen)
@@ -927,11 +914,11 @@ class AntlrG:
         children = copy.copy(obj.children)
         c = children.pop(0)
         assert not children
-        if isinstance(c, ANTLRv4Parser.CharacterRangeContext):
+        if isinstance(c, self.parser.CharacterRangeContext):
             return self.parse_characterRange(c)
-        elif isinstance(c, ANTLRv4Parser.TerminalContext):
+        elif isinstance(c, self.parser.TerminalContext):
             return self.parse_terminal(c)
-        elif isinstance(c, ANTLRv4Parser.NotSetContext):
+        elif isinstance(c, self.parser.NotSetContext):
             return self.parse_notSet(c)
         elif isinstance(c, tree.Tree.TerminalNodeImpl):
             if c.symbol.type == self.lexer.LEXER_CHAR_SET:
@@ -947,7 +934,7 @@ class AntlrG:
            : ruleSpec*
            ;
         '''
-        ruleSpec_star, children = self._parse_star_object(copy.copy(rules.children), ANTLRv4Parser.RuleSpecContext)
+        ruleSpec_star, children = self._parse_star_object(copy.copy(rules.children), self.parser.RuleSpecContext)
         rules_json = self.parse_rulesSpec_star(ruleSpec_star)
         return rules_json
 
