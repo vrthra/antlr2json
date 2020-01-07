@@ -948,31 +948,15 @@ class AntlrG:
         rules_json = self.parse_rulesSpec_star(ruleSpec_star)
         return rules_json
 
+import json
 def main():
     with open(sys.argv[1], 'r') as f:
         code = f.read()
     ag = AntlrG(code)
+
+    out = {}
     for elt in ag.res:
-        key = elt[0]
-        defs = elt[1]
-        print(key)
-        for rule in defs:
-            print('  ', rule)
-
-    # now print ebnf blocks
-    #for k in EBNF:
-    #    print(k)
-    #    e, rep = EBNF[k]
-    #    if rep == '*':
-    #        e.append(k)
-    #        print('  ', e)
-    #        print('  ', [])
-    #    elif rep == '+':
-    #        print('  ', e)
-    #    elif rep == '?':
-    #        print('  ', e)
-    #    else:
-    #        assert False
-
+        out[elt[0]] = elt[1]
+    print(json.dumps(out))
 if __name__ == '__main__':
     main()

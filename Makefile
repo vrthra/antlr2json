@@ -1,4 +1,5 @@
-
+run:
+	python3 tojson.py examples/JSON.g4
 
 all:
 	java -Xmx500M -cp ../antlr-4.7.2-complete.jar org.antlr.v4.Tool -Dlanguage=Python3 ANTLRv4Lexer.g4
@@ -13,7 +14,5 @@ prereq:
 D=-m pudb
 
 debug:
-	python3 $(D) tofuzzingbook.py examples/JSON.g4
+	python3 $(D) tojson.py examples/JSON.g4
 
-run:
-	python3 tofuzzingbook.py examples/JSON.g4
