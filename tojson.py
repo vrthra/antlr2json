@@ -25,6 +25,9 @@ class AntlrG:
         self.tree = self.parser.grammarSpec() # entry
         self.res = self.parse_grammarSpec(self.tree)
 
+    def toJSON(self):
+        return {elt[0]: elt[1] for elt in self.res}
+
     def _parse_token(self, children, typ):
         assert isinstance(children[0], tree.Tree.TerminalNodeImpl)
         tok = children.pop(0)
@@ -953,10 +956,6 @@ def main():
     with open(sys.argv[1], 'r') as f:
         code = f.read()
     ag = AntlrG(code)
-
-    out = {}
-    for elt in ag.res:
-        out[elt[0]] = elt[1]
-    print(json.dumps(out))
+    print(json.dumps(ag.toJSON()))
 if __name__ == '__main__':
     main()
