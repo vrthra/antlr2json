@@ -1,11 +1,13 @@
 def convert_token(jt):
-    return jt
+    if isinstance(jt, str):
+        return jt
+    else: return jt.__class__.__name__
 
 def convert_rule(jr):
     tokens = []
     for tok in jr:
         t = convert_token(tok)
-        tokens.append(tok)
+        tokens.append(t)
     return tokens
 
 def convert_define(k, jd):
