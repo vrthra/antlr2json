@@ -108,10 +108,11 @@ def main(arg):
         v = process_re(RE_DEFS[k], jval)
         jval[k] = [[v]]
 
-    for k in jval:
-        print(k)
-        for r in jval[k]:
-            print('  ', r)
+    #for k in jval:
+    #    print(k)
+    #    for r in jval[k]:
+    #        print('  ', r)
+    print(json.dumps(jval))
 
 if __name__ == '__main__':
     import sys
