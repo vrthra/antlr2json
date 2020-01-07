@@ -58,7 +58,7 @@ def process_q(regex, jval):
     return k
 
 def process_OR(values, jval):
-    k = '<_NOT_%s>' % next_sym()
+    k = '<_OR_%s>' % next_sym()
     jval[k] = [[process_re(v, jval)] for v in values]
     return k
 
