@@ -886,8 +886,13 @@ class AntlrG:
             ebnf_suffix, children = self._parse_question_object(children, ANTLRv4Parser.EbnfSuffixContext)
             assert not children
             res = self.parse_lexerBlock(c)
-            ebnf = None if not ebnf_suffix else [self.parse_ebnfSuffix(ebnf_suffix[0])]
-            return (res, ebnf)
+            ebnfs = [self.parse_ebnfSuffix(e) for e in ebnf_suffix]
+            if ebnfs:
+                e = ebnfs.pop(0)
+                assert e in {'*', '?', '+'}
+                return (e, res)
+            else:
+                return res
         else: assert False
 
     def parse_lexerBlock(self, obj):
