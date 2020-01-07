@@ -1,7 +1,11 @@
+def convert_regex(jt):
+    return ('re', jt)
+
 def convert_token(jt):
     if isinstance(jt, str):
         return jt
-    else: return jt.__class__.__name__
+    else:
+        return convert_regex(jt)
 
 def convert_rule(jr):
     tokens = []
