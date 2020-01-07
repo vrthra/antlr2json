@@ -65,25 +65,37 @@ def process_OR(values, jval):
 def process_NOT(regex, jval):
     k = '<_NOT_%s>' % next_sym()
     res = process_re(regex, jval)
-    jval[k] = ['NOT', res]
+    jval[k] = [['NOT', res]]
+    return k
+
+def process_SEQ(regex, jval):
+    k = '<_SEQ_%s>' % next_sym()
+    res = [process_re(e, jval) for e in regex]
+    jval[k] = [res]
     return k
 
 def process_re(regex, jval):
+    # return of process_re will be a token
     if isinstance(regex, str): return regex
-    if len(regex) < 2: return regex
-    op, val = regex
-    if op == '*':
-        return process_star(val, jval)
-    elif op == '+':
-        return process_plus(val, jval)
-    elif op == '?':
-        return process_q(val, jval)
-    elif op == 'or':
-        return process_OR(val, jval)
-    elif op == 'not':
-        return process_NOT(val, jval)
+    s = regex
+    if len(regex) < 2:
+        s = process_SEQ(regex, jval)
     else:
-        return regex
+        op, val = regex
+        if op == '*':
+            s = process_star(val, jval)
+        elif op == '+':
+            s = process_plus(val, jval)
+        elif op == '?':
+            s = process_q(val, jval)
+        elif op == 'or':
+            s = process_OR(val, jval)
+        elif op == 'not':
+            s = process_NOT(val, jval)
+        else:
+            # this is a seq.
+            s = process_SEQ(regex, jval)
+    return s
 
 def main(arg):
     import json
@@ -92,6 +104,7 @@ def main(arg):
 
     jval = convert_grammar(js)
     for k in RE_DEFS:
+        # return of process_re will be a token
         v = process_re(RE_DEFS[k], jval)
         jval[k] = [[v]]
 
