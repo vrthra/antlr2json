@@ -10,5 +10,10 @@ prereq:
 	pip install wheel
 	pip install antlr4-python3-runtime
 
+D=-m pudb
+
+debug:
+	python3 $(D) tofuzzingbook.py examples/JSON.g4
+
 run:
-	python3  tofuzzingbook.py examples/JSON.g4
+	python3 tofuzzingbook.py examples/JSON.g4
