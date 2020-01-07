@@ -1,3 +1,6 @@
+show: JSON.fbjson
+	python3 show.py JSON.fbjson
+
 JSON.fbjson: JSON.ebnf
 	python3 ebnftosimple.py JSON.ebnf > JSON.fbjson
 	python3 show.py JSON.fbjson
