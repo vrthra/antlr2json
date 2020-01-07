@@ -109,23 +109,41 @@ class AntlrG:
     def parse_LEXER_CHAR_SET(self, obj):
         return obj.symbol.text
 
+    def parse_COMMA(self, obj):
+        assert obj.symbol.text == ','
+        return ','
+
+    def parse_QUESTION(self, obj):
+        assert obj.symbol.text == '?'
+        return '?'
+
+    def parse_STAR(self, obj):
+        assert obj.symbol.text == '*'
+        return '*'
+
+    def parse_PLUS(self, obj):
+        assert obj.symbol.text == '+'
+        return '+'
+
     def parse_NOT(self, obj):
         assert obj.symbol.text == '~'
-        return None
+        return '~'
 
     def parse_RARROW(self, obj):
         assert obj.symbol.text == '->'
-        return None
+        return '->'
 
     def parse_LPAREN(self, obj):
         assert obj.symbol.text == '('
-        return None
+        return '('
 
     def parse_RPAREN(self, obj):
         assert obj.symbol.text == ')'
-        return None
+        return ')'
 
-    def parse_EOF(self, obj): return None
+    def parse_EOF(self, obj):
+        assert obj.symbol.text == '<EOF>'
+        return None
 
     def parse_prequelConstruct_star(self, obj): return None
 
@@ -376,7 +394,9 @@ class AntlrG:
         _o, children = self._parse_question_object(children, ANTLRv4Parser.BlockSuffixContext)
         if _o:
             v1 = self.parse_blockSuffix(_o[0])
+            # v1 could be * + or ?
             return [v, v1]
+        assert False
         return [v]
 
     def parse_blockSuffix(self, obj):
@@ -400,16 +420,20 @@ class AntlrG:
         '''
         children = copy.copy(obj.children)
         c = children.pop(0)
+        assert not children # How to handle ?? or *? or +?
         assert isinstance(c, tree.Tree.TerminalNodeImpl)
         if c.symbol.type == self.lexer.QUESTION:
+            v = self.parse_QUESTION(c)
             _o, children = self._parse_question_token(children, self.lexer.QUESTION)
-            return [c.symbol.text, [i.symbol.text for i in _o]]
+            return v + ''.join([self.parse_QUESTION(i) for i in _o])
         elif c.symbol.type == self.lexer.STAR:
+            v = self.parse_STAR(c)
             _o, children = self._parse_question_token(children, self.lexer.QUESTION)
-            return [c.symbol.text, [i.symbol.text for i in _o]]
+            return v + ''.join([self.parse_QUESTION(i) for i in _o])
         elif c.symbol.type == self.lexer.PLUS:
+            v = self.parse_PLUS(c)
             _o, children = self._parse_question_token(children, self.lexer.QUESTION)
-            return [c.symbol.text, [i.symbol.text for i in _o]]
+            return v + ''.join([self.parse_QUESTION(i) for i in _o])
         else:
             assert False
 
@@ -678,6 +702,7 @@ class AntlrG:
         def pred_inside(children_):
             _o, children = self._parse_question_token(children, self.lexer.COMMA)
             if _o is None: return None
+            self.parse_COMMA(_o[0])
             _o, children = self._parse_object(children, ANTLRv4Parser.LexerCommandContext)
             assert _o is not None
             return _o
