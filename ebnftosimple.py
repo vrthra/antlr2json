@@ -75,6 +75,10 @@ def process_SEQ(regex, jval):
     jval[k] = [res]
     return k
 
+def process_sqbr(val, jval):
+    s = process_CHARSET(val, jval)
+    return '[%s]' % s
+
 def process_CHARSET(val, jval):
     #now get everything until the first range
     v = val.find('-')
@@ -86,16 +90,13 @@ def process_CHARSET(val, jval):
         else:
             first_part = val[:v-1] # v-1 is the start char of range
             # v + 1 is the end char of range
-            fs = ''
-            if first_part:
-                fs = process_chars(first_part)
-            return  fs + process_range(val[v-1], val[v+1]) + process_CHARSET(val[v+2:], jval)
+            return process_chars(first_part) + process_range(val[v-1], val[v+1]) + process_CHARSET(val[v+2:], jval)
 
 def process_chars(chars):
-    return '[%s]' % chars
+    return chars
 
 def process_range(a, b):
-    return '[%s]' % ''.join([chr(c) for c in range(ord(a), ord(b)+1)])
+    return ''.join([chr(c) for c in range(ord(a), ord(b)+1)])
 
 def process_re(regex, jval):
     # return of process_re will be a token
@@ -120,7 +121,7 @@ def process_re(regex, jval):
             mystring = val[1:-1]
             v = bytes(mystring, 'utf-8').decode('unicode_escape')
             #v = codecs.escape_decode(bytes(mystring, "utf-8"))[0].decode("utf-8")
-            s = process_CHARSET(v, jval)
+            s = process_sqbr(v, jval)
         else:
             # this is a seq.
             s = process_SEQ(regex, jval)
