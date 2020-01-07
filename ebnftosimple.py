@@ -1,4 +1,5 @@
 import codecs
+import string
 RE_DEFS = {}
 
 Counter = 0
@@ -65,8 +66,16 @@ def process_OR(values, jval):
 
 def process_NOT(regex, jval):
     k = '<_NOT_%s>' % next_sym()
-    res = process_re(regex, jval)
-    jval[k] = [['NOT', res]]
+    op, val = regex
+    assert op == 'charset'
+    #res = process_re(regex, jval)
+    chars = process_CHARSET(val, jval)
+    # what is our full set of chars?
+    our_chars = set(string.printable)
+    rest = list(our_chars - set(chars))
+
+    k = '<_CNOT_%s>' % next_sym()
+    jval[k] = [[i] for i in rest]
     return k
 
 def process_SEQ(regex, jval):
@@ -76,8 +85,10 @@ def process_SEQ(regex, jval):
     return k
 
 def process_sqbr(val, jval):
+    k = '<_CSET_%s>' % next_sym()
     s = process_CHARSET(val, jval)
-    return '[%s]' % s
+    jval[k] = [[i] for i in s]
+    return k
 
 def process_CHARSET(val, jval):
     #now get everything until the first range
