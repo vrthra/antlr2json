@@ -1,3 +1,4 @@
+import codecs
 RE_DEFS = {}
 
 Counter = 0
@@ -116,7 +117,9 @@ def process_re(regex, jval):
             s = process_NOT(val, jval)
         elif op == 'charset':
             assert (val[0], val[-1]) == ('[', ']')
-            v = bytes(val[1:-1], 'utf-8').decode('unicode_escape')
+            mystring = val[1:-1]
+            v = bytes(mystring, 'utf-8').decode('unicode_escape')
+            #v = codecs.escape_decode(bytes(mystring, "utf-8"))[0].decode("utf-8")
             s = process_CHARSET(v, jval)
         else:
             # this is a seq.
