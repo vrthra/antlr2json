@@ -909,7 +909,7 @@ class AntlrG:
         rparen, children = self._parse_token(children, self.lexer.RPAREN)
         self.parse_RPAREN(rparen)
         assert not children
-        return res
+        return ('or', res)
 
     def parse_lexerAtom(self, obj):
         '''
