@@ -23,7 +23,9 @@ class AntlrG:
         return tree.toStringTree(recog=self.parser)
 
     def toJSON(self):
-        return {elt[0]: elt[1] for elt in self.res}
+        v = {elt[0]: elt[1] for elt in self.res}
+        v[''] = self.res[0][0]
+        return v
 
     def _parse_token(self, children, typ):
         assert isinstance(children[0], tree.Tree.TerminalNodeImpl)
@@ -115,7 +117,7 @@ class AntlrG:
         return rules_json
 
     def parse_DOT(self, obj):
-        return ('.', obj.symbol.text)
+        return ('dot', obj.symbol.text)
 
     def parse_LEXER_CHAR_SET(self, obj):
         return ('charset', obj.symbol.text)

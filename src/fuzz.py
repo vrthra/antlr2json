@@ -58,10 +58,11 @@ import json
 def main(arg):
     with open(arg) as f:
         g = json.load(fp=f)
-    k = list(g.keys())[0]
+    start = g['']
+    del g['']
     lf = LimitFuzzer(g)
     for i in range(10):
-        v = lf.fuzz(key=k)
+        v = lf.fuzz(key=start)
         # v = unify_key(g, k)
         print(repr(v))
         print('------')

@@ -67,6 +67,13 @@ def process_q(regex, jval):
     jval[k] = [[res], []]
     return k
 
+def process_dot(values, jval):
+    # dot is like OR but there is only one
+    k = '<_DOT>'
+    jval[k] = [[v] for v in string.printable]
+    return k
+
+
 def process_OR(values, jval):
     k = '<_OR_%s>' % next_sym()
     jval[k] = [[process_re(v, jval)] for v in values]
@@ -131,12 +138,15 @@ def process_re(regex, jval):
         s = process_SEQ(regex, jval)
     else:
         op, val = regex
-        if op == '*':
+        # note there could be `?` to indicate nongreed on op[1]
+        if op[0] == '*':
             s = process_star(val, jval)
-        elif op == '+':
+        elif op[0] == '+':
             s = process_plus(val, jval)
-        elif op == '?':
+        elif op[0] == '?':
             s = process_q(val, jval)
+        elif op == 'dot':
+            s = process_dot(val, jval)
         elif op == 'or':
             s = process_OR(val, jval)
         elif op == 'not':
@@ -159,6 +169,8 @@ def main(arg):
     import json
     with open(arg) as f:
         js = json.load(fp=f)
+    start = js['']
+    del js['']
 
     jval = convert_grammar(js)
     # for k in RE_DEFS:
@@ -170,6 +182,7 @@ def main(arg):
     #    print(k)
     #    for r in jval[k]:
     #        print('  ', r)
+    jval[''] = start
     print(json.dumps(jval))
 
 if __name__ == '__main__':
