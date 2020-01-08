@@ -298,9 +298,10 @@ class AntlrG:
         children = obj.children
         ac, children = self._parse_object(children, self.parser.AlternativeContext)
         acr =  self.parse_alternative(ac)
+        assert acr[0] == 'seq'
         res, children = self._parse_question_x(children, pred_inside)
 
-        return acr
+        return acr[1]
 
 
     def parse_alternative(self, obj):
@@ -316,13 +317,14 @@ class AntlrG:
         if not children:
             return []
         _o, children = self._parse_question_object(children, self.parser.ElementOptionsContext)
+        assert not _o
         elts, children = self._parse_star_object(children, self.parser.ElementContext)
         assert len(elts) >= 1 # element+
         res = []
         for e in elts:
             r = self.parse_element(e)
             res.append(r)
-        return res
+        return ('seq', res)
 
     def parse_element(self, obj):
         '''

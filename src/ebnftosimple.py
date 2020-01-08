@@ -135,6 +135,8 @@ def process_re(regex, jval):
             s = process_OR(val, jval)
         elif op == 'not':
             s = process_NOT(val, jval)
+        elif op == 'seq':
+            s = process_SEQ(val, jval)
         elif op == 'charset':
             assert (val[0], val[-1]) == ('[', ']')
             mystring = val[1:-1]
