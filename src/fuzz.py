@@ -15,6 +15,9 @@ def main(arg):
     for i in range(10):
         v = unify_key(g, '<json>')
         print(repr(''.join(v)))
+        print('------')
+        print(''.join(v))
+        print('------')
 
 if __name__ == '__main__':
     main(sys.argv[1])

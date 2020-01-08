@@ -1,20 +1,22 @@
-show: JSON.fbjson
-	python3 show.py JSON.fbjson
+export PYTHONPATH=build
 
-fuzz: JSON.fbjson
-	python3 fuzz.py JSON.fbjson
+show: build/JSON.fbjson
+	python3 src/show.py build/JSON.fbjson
 
-JSON.fbjson: JSON.ebnf
-	python3 ebnftosimple.py JSON.ebnf > JSON.fbjson
+fuzz: build/JSON.fbjson
+	python3 src/fuzz.py build/JSON.fbjson
 
-JSON.ebnf: examples/JSON.g4 ANTLRv4Lexer.py ANTLRv4Parser.py
-	python3 tojson.py examples/JSON.g4 > JSON.ebnf
+build/JSON.fbjson: build/JSON.ebnf
+	python3 src/ebnftosimple.py build/JSON.ebnf > build/JSON.fbjson
 
-ANTLRv4Lexer.py: ANTLRv4Lexer.g4
-	java -Xmx500M -cp ../antlr-4.7.2-complete.jar org.antlr.v4.Tool -Dlanguage=Python3 ANTLRv4Lexer.g4
+build/JSON.ebnf: examples/JSON.g4 build/ANTLRv4Lexer.py build/ANTLRv4Parser.py | build
+	python3 src/tojson.py examples/JSON.g4 > build/JSON.ebnf
 
-ANTLRv4Parser.py: ANTLRv4Parser.g4
-	java -Xmx500M -cp ../antlr-4.7.2-complete.jar org.antlr.v4.Tool -Dlanguage=Python3 ANTLRv4Parser.g4
+build/ANTLRv4Lexer.py: src/ANTLRv4Lexer.g4 | build
+	java -Xmx500M -cp ../antlr-4.7.2-complete.jar org.antlr.v4.Tool -Xexact-output-dir -o build -Dlanguage=Python3 src/ANTLRv4Lexer.g4
+
+build/ANTLRv4Parser.py: src/ANTLRv4Parser.g4 | build
+	java -Xmx500M -cp ../antlr-4.7.2-complete.jar org.antlr.v4.Tool -Xexact-output-dir -o build -lib build -Dlanguage=Python3 src/ANTLRv4Parser.g4
 
 prereq:
 	wget https://www.antlr.org/download/antlr-4.7.2-complete.jar
@@ -24,11 +26,13 @@ prereq:
 
 D=-m pudb
 
+build:;mkdir -p build
+
 debug:
 	python3 $(D) tojson.py examples/JSON.g4
 
 clean:
-	rm -f ANTLRv4Lexer.py ANTLRv4Parser.py ANTLRv4Lexer.interp ANTLRv4Parser.interp ANTLRv4Lexer.tokens ANTLRv4Parser.tokens ANTLRv4ParserListener.py
-	rm -rf __pycache__/
-	rm -rf JSON.ebnf
-	rm -rf JSON.fbjson
+	rm -f build/ANTLRv4Lexer.py build/ANTLRv4Parser.py build/ANTLRv4Lexer.interp build/ANTLRv4Parser.interp build/ANTLRv4Lexer.tokens build/ANTLRv4Parser.tokens build/ANTLRv4ParserListener.py
+	rm -rf src/__pycache__/
+	rm -rf build/JSON.ebnf
+	rm -rf build/JSON.fbjson
