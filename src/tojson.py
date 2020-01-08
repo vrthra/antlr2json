@@ -5,6 +5,9 @@ from ANTLRv4Parser import ANTLRv4Parser
 import sys
 import copy
 
+def warn(v):
+    pass
+
 class AntlrG:
     def __init__(self, code):
         self.lexer = ANTLRv4Lexer(InputStream(code))
@@ -15,6 +18,9 @@ class AntlrG:
 
         self.tree = self.parser.grammarSpec() # entry
         self.res = self.parse_grammarSpec(self.tree)
+
+    def toStr(self, tree):
+        return tree.toStringTree(recog=self.parser)
 
     def toJSON(self):
         return {elt[0]: elt[1] for elt in self.res}
@@ -107,7 +113,9 @@ class AntlrG:
         _o, children = self._parse_token(children, self.parser.EOF)
         self.parse_EOF(_o)
         return rules_json
-        #tree.toStringTree(recog=self.parser)
+
+    def parse_DOT(self, obj):
+        return ('.', obj.symbol.text)
 
     def parse_LEXER_CHAR_SET(self, obj):
         return ('charset', obj.symbol.text)
@@ -280,7 +288,7 @@ class AntlrG:
            ;
         '''
         # a single production rule
-        def pred_inside(children_):
+        def pred_inside(children):
             _o, children = self._parse_question_token(children, self.lexer.POUND)
             if _o is None: return None
             _o, children = self._parse_object(children, self.parser.IdentifierContext)
@@ -337,25 +345,40 @@ class AntlrG:
             ebnf = None
             if len(children) > 1:
                 ebnf = self.parse_ebnfSuffix(children[1])
-                assert False
-                # return [le, ebnf]
+                return (ebnf, le)
             return le
         elif isinstance(c, self.parser.AtomContext):
             le = self.parse_atom(c)
             ebnf = None
             if len(children) > 1:
                 ebnf = self.parse_ebnfSuffix(children[1])
-                assert False
-                # return [le, ebnf]
+                return (ebnf, le)
             return le
         elif isinstance(c, self.parser.EbnfContext):
-            blk, blksuffix = self.parse_ebnf(c)
-            return (blksuffix, blk)
+            blksuffix, blk = self.parse_ebnf(c)
+            if blksuffix is None:
+                return blk
+            else:
+                return (blksuffix, blk)
 
         elif isinstance(c, self.parser.ActionBlockContext):
-            raise NotImplemented()
+            #warn('ActionBlock found at: %d' % c.start.line)
+            ab = self.parse_actionBlock(c)
+            return ('action', ab)
         else:
             assert False
+
+    def parse_actionBlock(self, obj):
+        '''
+        actionBlock
+           : BEGIN_ACTION ACTION_CONTENT* END_ACTION
+          ;
+        '''
+        children = copy.copy(obj.children)
+        b, children = self._parse_token(children, self.lexer.BEGIN_ACTION)
+        cs, children = self._parse_star_token(children, self.lexer.ACTION_CONTENT)
+        e, children = self._parse_token(children, self.lexer.END_ACTION)
+        return '%s %s %s' % (b.symbol.text, ''.join([c.symbol.text for c in cs]), e.symbol.text)
 
     def parse_setElement(self, obj):
         '''
@@ -414,9 +437,8 @@ class AntlrG:
         if _o:
             v1 = self.parse_blockSuffix(_o[0])
             # v1 could be *, +, ?, *?, +?, or ??
-            return [v, v1]
-        assert False
-        return [v, None]
+            return (v1, v)
+        return (None, v)
 
     def parse_blockSuffix(self, obj):
         '''
@@ -439,7 +461,7 @@ class AntlrG:
         '''
         children = copy.copy(obj.children)
         c = children.pop(0)
-        assert not children # How to handle ?? or *? or +?
+        # assert not children # How to handle ?? or *? or +?
         assert isinstance(c, tree.Tree.TerminalNodeImpl)
         if c.symbol.type == self.lexer.QUESTION:
             v = self.parse_QUESTION(c)
@@ -800,7 +822,6 @@ class AntlrG:
         if not children:
             return cname
 
-        assert False
         _o, children = self._parse_token(children, self.lexer.LPAREN)
         self.parse_LPAREN(_o)
         ce, children = self._parse_object(children, self.parser.LexerCommandExprContext)
@@ -842,7 +863,18 @@ class AntlrG:
            // --------------------
            // Rule Alts
         '''
-        raise NotImplemented()
+        children = copy.copy(obj.children)
+        c = children[0]
+        if isinstance(c, self.parser.IdentifierContext):
+            _o, children = self._parse_object(copy.copy(obj.children), self.parser.IdentifierContext)
+            assert not children
+            return self.parse_identifier(_o)
+        elif isinstance(c, tree.Tree.TerminalNodeImpl):
+            _o, children = self._parse_token(children, self.lexer.MODE)
+            assert not children
+            return self.parse_INT(_o)
+        else:
+            assert False
 
     def parse_lexerElements(self, obj):
         '''
@@ -879,13 +911,18 @@ class AntlrG:
             res = self.parse_lexerAtom(c)
             if ebnfs:
                 e = ebnfs.pop(0)
-                assert e in {'*', '?', '+'}
+                # assert e in {'*', '?', '+'}
                 return (e, res)
             else:
                 return res
         elif isinstance(c, self.parser.ActionBlockContext):
+            res = self.parse_actionBlock(c)
+            q, children = self._parse_question_token(children, self.lexer.QUESTION)
             assert not children
-            return self.parse_actionBlock(c)
+            if q is not None:
+                return res
+            else:
+                return (q, res)
         elif isinstance(c, self.parser.LexerBlockContext):
             ebnf_suffix, children = self._parse_question_object(children, self.parser.EbnfSuffixContext)
             assert not children
@@ -938,7 +975,7 @@ class AntlrG:
             if c.symbol.type == self.lexer.LEXER_CHAR_SET:
                 return self.parse_LEXER_CHAR_SET(c)
             elif c.symbol.type == self.lexer.DOT:
-                assert False
+                return self.parse_DOT(c)
         else:
             assert False
 
