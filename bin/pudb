@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+PYTHONPATH=build python3 -m pudb $@
