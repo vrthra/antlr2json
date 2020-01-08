@@ -7,10 +7,15 @@ fuzz: build/JSON.fbjson
 	python3 src/fuzz.py build/JSON.fbjson
 
 build/JSON.fbjson: build/JSON.ebnf
-	python3 src/ebnftosimple.py build/JSON.ebnf > build/JSON.fbjson
+	python3 src/ebnftosimple.py build/JSON.ebnf > build/JSON.fbjson_
+	cat build/JSON.fbjson_ | jq . > build/JSON.fbjson
+	rm -f build/JSON.fbjson_
 
 build/JSON.ebnf: examples/JSON.g4 build/ANTLRv4Lexer.py build/ANTLRv4Parser.py | build
-	python3 src/tojson.py examples/JSON.g4 > build/JSON.ebnf
+	python3 src/tojson.py examples/JSON.g4 > build/JSON.ebnf_
+	cat build/JSON.ebnf_ | jq . > build/JSON.ebnf
+	rm -f build/JSON.ebnf_
+
 
 build/ANTLRv4Lexer.py: src/ANTLRv4Lexer.g4 | build
 	java -Xmx500M -cp ../antlr-4.7.2-complete.jar org.antlr.v4.Tool -Xexact-output-dir -o build -Dlanguage=Python3 src/ANTLRv4Lexer.g4
@@ -33,6 +38,6 @@ debug:
 
 clean:
 	rm -f build/ANTLRv4Lexer.py build/ANTLRv4Parser.py build/ANTLRv4Lexer.interp build/ANTLRv4Parser.interp build/ANTLRv4Lexer.tokens build/ANTLRv4Parser.tokens build/ANTLRv4ParserListener.py
-	rm -rf src/__pycache__/
+	rm -rf src/__pycache__/ build/__pycache__/
 	rm -rf build/JSON.ebnf
 	rm -rf build/JSON.fbjson
