@@ -37,7 +37,7 @@ def convert_rule(jr, k, g):
                   t = convert_token(tok, g)
                   if t is not None:
                       tokens.append(t)
-              g['<>'] = [tokens]
+              g.setdefault('<>', []).append([k])
               return tokens
            assert False
        else:
@@ -179,6 +179,29 @@ def process_re(regex, jval):
             s = process_SEQ(regex, jval)
     return s
 
+def insert_skip_in_rule(rule_):
+    # before ach Lexer token, insert '<>'
+    tokens = []
+    for t in rule_:
+        if len(t) > 1 and t[0] == '<' and t[1].isupper():
+            tokens.append('<>')
+        tokens.append(t)
+    return tokens
+
+def insert_skips(g):
+    new_g = {}
+    for k in g:
+        new_rules = []
+        for rule_ in g[k]:
+            if k != '<>':
+                rule = insert_skip_in_rule(rule_)
+            else:
+                rule = rule_
+            new_rules.append(rule)
+        new_g[k] = new_rules
+    return new_g
+
+
 def main(arg):
     import json
     with open(arg) as f:
@@ -187,15 +210,10 @@ def main(arg):
     del js['']
 
     jval = convert_grammar(js)
-    # for k in RE_DEFS:
-        # return of process_re will be a token
-        # v = process_re(RE_DEFS[k], jval)
-        # jval[k] = [[v]]
+    # now insert the skipped values.
+    if '<>' in jval:
+        jval = insert_skips(jval)
 
-    #for k in jval:
-    #    print(k)
-    #    for r in jval[k]:
-    #        print('  ', r)
     jval[''] = start
     print(json.dumps(jval))
 
