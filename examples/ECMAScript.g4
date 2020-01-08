@@ -1,7 +1,8 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2014 by Bart Kiers
+ * Copyright (c) 2014 by Bart Kiers (original author) and Adrian Herrera
+ * (contributor -> ported to Python)
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -27,158 +28,141 @@
 grammar ECMAScript;
 
 @parser::members {
-  
-    /**
-     * Returns {@code true} iff on the current index of the parser's
-     * token stream a token of the given {@code type} exists on the
-     * {@code HIDDEN} channel.
-     *
-     * @param type
-     *         the type of the token on the {@code HIDDEN} channel
-     *         to check.
-     *
-     * @return {@code true} iff on the current index of the parser's
-     * token stream a token of the given {@code type} exists on the
-     * {@code HIDDEN} channel.
-     */
-    private boolean here(final int type) {
+def here(self, type):
+    """Returns `True` iff on the current index of the parser's
+    token stream a token of the given `type` exists on the
+    `HIDDEN` channel.
 
-        // Get the token ahead of the current index.
-        int possibleIndexEosToken = this.getCurrentToken().getTokenIndex() - 1;
-        Token ahead = _input.get(possibleIndexEosToken);
+    Args:
+        type (int): the type of the token on the `HIDDEN` channel
+        to check.
 
-        // Check if the token resides on the HIDDEN channel and if it's of the
-        // provided type.
-        return (ahead.getChannel() == Lexer.HIDDEN) && (ahead.getType() == type);
-    }
+    Returns:
+        `True` iff on the current index of the parser's
+        token stream a token of the given `type` exists on the
+        `HIDDEN` channel.
+    """
+    # Get the token ahead of the current index.
+    possibleIndexEosToken = self.getCurrentToken().tokenIndex - 1
+    ahead = self._input.get(possibleIndexEosToken)
 
-    /**
-     * Returns {@code true} iff on the current index of the parser's
-     * token stream a token exists on the {@code HIDDEN} channel which
-     * either is a line terminator, or is a multi line comment that
-     * contains a line terminator.
-     *
-     * @return {@code true} iff on the current index of the parser's
-     * token stream a token exists on the {@code HIDDEN} channel which
-     * either is a line terminator, or is a multi line comment that
-     * contains a line terminator.
-     */
-    private boolean lineTerminatorAhead() {
+    # Check if the token resides on the HIDDEN channel and if it is of the
+    # provided type.
+    return (ahead.channel == Lexer.HIDDEN) and (ahead.type == type)
 
-        // Get the token ahead of the current index.
-        int possibleIndexEosToken = this.getCurrentToken().getTokenIndex() - 1;
-        Token ahead = _input.get(possibleIndexEosToken);
+def lineTerminatorAhead(self):
+    """Returns `True` iff on the current index of the parser's
+    token stream a token exists on the `HIDDEN` channel which
+    either is a line terminator, or is a multi line comment that
+    contains a line terminator.
 
-        if (ahead.getChannel() != Lexer.HIDDEN) {
-            // We're only interested in tokens on the HIDDEN channel.
-            return false;
-        }
+    Returns:
+        `True` iff on the current index of the parser's
+        token stream a token exists on the `HIDDEN` channel which
+        either is a line terminator, or is a multi line comment that
+        contains a line terminator.
+    """
+    # Get the token ahead of the current index.
+    possibleIndexEosToken = self.getCurrentToken().tokenIndex - 1
+    ahead = self._input.get(possibleIndexEosToken)
 
-        if (ahead.getType() == LineTerminator) {
-            // There is definitely a line terminator ahead.
-            return true;
-        }
+    if ahead.channel != Lexer.HIDDEN:
+        # We're only interested in tokens on the HIDDEN channel.
+        return False
 
-        if (ahead.getType() == WhiteSpaces) {
-            // Get the token ahead of the current whitespaces.
-            possibleIndexEosToken = this.getCurrentToken().getTokenIndex() - 2;
-            ahead = _input.get(possibleIndexEosToken);
-        }
+    if ahead.type == ECMAScriptParser.LineTerminator:
+        # There is definitely a line terminator ahead.
+        return True
 
-        // Get the token's text and type.
-        String text = ahead.getText();
-        int type = ahead.getType();
+    if ahead.type == ECMAScriptParser.WhiteSpaces:
+        # Get the token ahead of the current whitespaces.
+        possibleIndexEosToken = self.getCurrentToken().tokenIndex - 2
+        ahead = self._input.get(possibleIndexEosToken)
 
-        // Check if the token is, or contains a line terminator.
-        return (type == MultiLineComment && (text.contains("\r") || text.contains("\n"))) ||
-                (type == LineTerminator);
-    }                                
+    # Get the token's text and type.
+    text = ahead.text
+    type = ahead.type
+
+    # Check if the token is, or contains a line terminator.
+    return (type == ECMAScriptParser.MultiLineComment and \
+        ('\r' in text or '\n' in text)) or \
+        (type == ECMAScriptParser.LineTerminator)
 }
 
 @lexer::members {
-                 
-    // A flag indicating if the lexer should operate in strict mode.
-    // When set to true, FutureReservedWords are tokenized, when false,
-    // an octal literal can be tokenized.
-    private boolean strictMode = true;
+    # A flag indicating if the lexer should operate in strict mode
+    # When set to true, FutureReservedWords are tokenized, when false,
+    # an octal literal can be tokenized
+    self._strictMode = True
 
-    // The most recently produced token.
-    private Token lastToken = null;
+    # The most recently produced token.
+    self._lastToken = None
 
-    /**
-     * Returns {@code true} iff the lexer operates in strict mode.
-     *
-     * @return {@code true} iff the lexer operates in strict mode.
-     */
-    public boolean getStrictMode() {
-        return this.strictMode;
-    }
+@property
+def strictMode(self):
+    """Returns `True` iff the lexer operates in strict mode.
 
-    /**
-     * Sets whether the lexer operates in strict mode or not.
-     *
-     * @param strictMode
-     *         the flag indicating the lexer operates in strict mode or not.
-     */
-    public void setStrictMode(boolean strictMode) {
-        this.strictMode = strictMode;
-    }
+    Returns:
+        `True` iff the lexer operates in strict mode.
+    """
+    return self._strictMode
 
-    /**
-     * Return the next token from the character stream and records this last
-     * token in case it resides on the default channel. This recorded token
-     * is used to determine when the lexer could possibly match a regex
-     * literal.
-     *
-     * @return the next token from the character stream.
-     */
-    @Override
-    public Token nextToken() {
-        
-        // Get the next token.
-        Token next = super.nextToken();
-        
-        if (next.getChannel() == Token.DEFAULT_CHANNEL) {
-            // Keep track of the last token on the default channel.                                              
-            this.lastToken = next;
-        }
-        
-        return next;
-    }
+@strictMode.setter
+def strictMode(self, strictMode):
+    """Sets whether the lexer operates in strict mode or not.
 
-    /**
-     * Returns {@code true} iff the lexer can match a regex literal.
-     *
-     * @return {@code true} iff the lexer can match a regex literal.
-     */
-    private boolean isRegexPossible() {
-                                       
-        if (this.lastToken == null) {
-            // No token has been produced yet: at the start of the input,
-            // no division is possible, so a regex literal _is_ possible.
-            return true;
-        }
-        
-        switch (this.lastToken.getType()) {
-            case Identifier:
-            case NullLiteral:
-            case BooleanLiteral:
-            case This:
-            case CloseBracket:
-            case CloseParen:
-            case OctalIntegerLiteral:
-            case DecimalLiteral:
-            case HexIntegerLiteral:
-            case StringLiteral:
-            case PlusPlus:
-            case MinusMinus:
-                // After any of the tokens above, no regex literal can follow.
-                return false;
-            default:
-                // In all other cases, a regex literal _is_ possible.
-                return true;
-        }
-    }
+    Args:
+        strictMode (bool): the flag indicating the lexer operates in strict
+        mode or not.
+    """
+    self._strictMode = strictMode
+
+def nextToken(self):
+    """Return the next token from the character stream and records this last
+    token in case it resides on the default channel. This recorded token
+    is used to determine when the lexer could possible match a regex
+    literal.
+
+    Returns:
+        the next token from the character stream.
+    """
+    # Get the next token.
+    next = super(ECMAScriptLexer, self).nextToken()
+
+    if next.channel == Token.DEFAULT_CHANNEL:
+        # Keep track of the last token on the default channel.
+        self._lastToken = next
+
+    return next
+
+def isRegexPossible(self):
+    """Returns `True` iff the lexer can match a regex literal.
+
+    Returns:
+        `True` iff the lexer can match a regex literal.
+    """
+    if self._lastToken is None:
+        # No token has been produced yet: at the start of the input,
+        # no division is possible, so a regex literal _is_ possible.
+        return True
+
+    if self._lastToken.type == ECMAScriptLexer.Identifier or \
+            self._lastToken.type == ECMAScriptLexer.NullLiteral or \
+            self._lastToken.type == ECMAScriptLexer.BooleanLiteral or \
+            self._lastToken.type == ECMAScriptLexer.This or \
+            self._lastToken.type == ECMAScriptLexer.CloseBracket or \
+            self._lastToken.type == ECMAScriptLexer.CloseParen or \
+            self._lastToken.type == ECMAScriptLexer.OctalIntegerLiteral or \
+            self._lastToken.type == ECMAScriptLexer.DecimalLiteral or \
+            self._lastToken.type == ECMAScriptLexer.HexIntegerLiteral or \
+            self._lastToken.type == ECMAScriptLexer.StringLiteral or \
+            self._lastToken.type == ECMAScriptLexer.PlusPlus or \
+            self._lastToken.type == ECMAScriptLexer.MinusMinus:
+        # After any of the tokens above, no regex literal can follow.
+        return False
+    else:
+        # In all other cases, a regex literal _is_ possible.
+        return True
 }
 
 /// Program :
@@ -198,7 +182,7 @@ sourceElements
 ///     Statement
 ///     FunctionDeclaration
 sourceElement
- : {_input.LA(1) != Function}? statement
+ : {self._input.LA(1) != ECMAScriptParser.Function}? statement
  | functionDeclaration
  ;
 
@@ -222,7 +206,7 @@ statement
  : block
  | variableStatement
  | emptyStatement
- | {_input.LA(1) != OpenBrace}? expressionStatement
+ | {self._input.LA(1) != ECMAScriptParser.OpenBrace}? expressionStatement
  | ifStatement
  | iterationStatement
  | continueStatement
@@ -313,21 +297,21 @@ iterationStatement
 ///     continue ;
 ///     continue [no LineTerminator here] Identifier ;
 continueStatement
- : Continue ({!here(LineTerminator)}? Identifier)? eos
+ : Continue ({not self.here(ECMAScriptParser.LineTerminator)}? Identifier)? eos
  ;
 
 /// BreakStatement :
 ///     break ;
 ///     break [no LineTerminator here] Identifier ;
 breakStatement
- : Break ({!here(LineTerminator)}? Identifier)? eos
+ : Break ({not self.here(ECMAScriptParser.LineTerminator)}? Identifier)? eos
  ;
 
 /// ReturnStatement :
 ///     return ;
 ///     return [no LineTerminator here] Expression ;
 returnStatement
- : Return ({!here(LineTerminator)}? expressionSequence)? eos
+ : Return ({not self.here(ECMAScriptParser.LineTerminator)}? expressionSequence)? eos
  ;
 
 /// WithStatement :
@@ -377,7 +361,7 @@ labelledStatement
 /// ThrowStatement :
 ///     throw [no LineTerminator here] Expression ;
 throwStatement
- : Throw {!here(LineTerminator)}? expressionSequence eos
+ : Throw {not self.here(ECMAScriptParser.LineTerminator)}? expressionSequence eos
  ;
 
 /// TryStatement :
@@ -630,8 +614,8 @@ singleExpression
  | singleExpression '.' identifierName                                    # MemberDotExpression
  | singleExpression arguments                                             # ArgumentsExpression
  | New singleExpression arguments?                                        # NewExpression
- | singleExpression {!here(LineTerminator)}? '++'                         # PostIncrementExpression
- | singleExpression {!here(LineTerminator)}? '--'                         # PostDecreaseExpression
+ | singleExpression {not self.here(ECMAScriptParser.LineTerminator)}? '++'# PostIncrementExpression
+ | singleExpression {not self.here(ECMAScriptParser.LineTerminator)}? '--'# PostDecreaseExpression
  | Delete singleExpression                                                # DeleteExpression
  | Void singleExpression                                                  # VoidExpression
  | Typeof singleExpression                                                # TypeofExpression
@@ -757,18 +741,18 @@ futureReservedWord
  ;
 
 getter
- : {_input.LT(1).getText().equals("get")}? Identifier propertyName
+ : {self._input.LT(1).text == "get"}? Identifier propertyName
  ;
 
 setter
- : {_input.LT(1).getText().equals("set")}? Identifier propertyName
+ : {self._input.LT(1).text == "set"}? Identifier propertyName
  ;
 
 eos
  : SemiColon
  | EOF
- | {lineTerminatorAhead()}?
- | {_input.LT(1).getType() == CloseBrace}?
+ | {self.lineTerminatorAhead()}?
+ | {self._input.LT(1).type == ECMAScriptParser.CloseBrace}?
  ;
 
 eof
@@ -778,7 +762,7 @@ eof
 /// RegularExpressionLiteral ::
 ///     / RegularExpressionBody / RegularExpressionFlags
 RegularExpressionLiteral
- : {isRegexPossible()}? '/' RegularExpressionBody '/' RegularExpressionFlags
+ : {self.isRegexPossible()}? '/' RegularExpressionBody '/' RegularExpressionFlags
  ;
 
 /// 7.3 Line Terminators
@@ -859,7 +843,7 @@ HexIntegerLiteral
  ;
 
 OctalIntegerLiteral
- : {!strictMode}? '0' OctalDigit+
+ : {not self.strictMode}? '0' OctalDigit+
  ;
 
 /// 7.6.1.1 Keywords
@@ -901,15 +885,15 @@ Import  : 'import';
 
 /// The following tokens are also considered to be FutureReservedWords 
 /// when parsing strict mode  
-Implements : {strictMode}? 'implements';
-Let        : {strictMode}? 'let';
-Private    : {strictMode}? 'private';
-Public     : {strictMode}? 'public';
-Interface  : {strictMode}? 'interface';
-Package    : {strictMode}? 'package';
-Protected  : {strictMode}? 'protected';
-Static     : {strictMode}? 'static';
-Yield      : {strictMode}? 'yield';
+Implements : {self.strictMode}? 'implements';
+Let        : {self.strictMode}? 'let';
+Private    : {self.strictMode}? 'private';
+Public     : {self.strictMode}? 'public';
+Interface  : {self.strictMode}? 'interface';
+Package    : {self.strictMode}? 'package';
+Protected  : {self.strictMode}? 'protected';
+Static     : {self.strictMode}? 'static';
+Yield      : {self.strictMode}? 'yield';
 
 /// 7.6 Identifier Names and Identifiers
 Identifier
