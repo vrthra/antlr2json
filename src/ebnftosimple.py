@@ -16,7 +16,8 @@ def convert_regex(jt):
 
 def convert_token(jt):
     if isinstance(jt, str):
-        return jt
+        v = bytes(jt, 'utf-8').decode('unicode_escape')
+        return v
     else:
         return convert_regex(jt)
 
