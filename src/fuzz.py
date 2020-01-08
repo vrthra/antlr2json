@@ -37,6 +37,7 @@ class LimitFuzzer(Fuzzer):
                     for token in tokens if token in grammar), default=0) + 1
 
     def gen_key(self, key, depth, max_depth):
+        if key == '<EOF>': return ''
         if key not in self.grammar: return key
         if depth > max_depth:
             clst = sorted([(self.cost[key][str(rule)], rule) for rule in self.grammar[key]])
@@ -50,13 +51,6 @@ class LimitFuzzer(Fuzzer):
 
     def fuzz(self, key='<start>', max_depth=10):
         return self.gen_key(key=key, depth=0, max_depth=max_depth)
-
-
-def unify_key(grammar, key):
-    return unify_rule(grammar, random.choice(grammar[key])) if key in grammar else [key]
-
-def unify_rule(grammar, rule):
-    return sum([unify_key(grammar, token) for token in rule], [])
 
 import sys
 import json
