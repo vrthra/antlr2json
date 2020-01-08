@@ -301,7 +301,7 @@ class AntlrG:
         assert acr[0] == 'seq'
         res, children = self._parse_question_x(children, pred_inside)
 
-        return acr[1]
+        return acr
 
 
     def parse_alternative(self, obj):
@@ -779,7 +779,7 @@ class AntlrG:
         _o, children = self._parse_question_object(cs, self.parser.LexerCommandsContext)
         if _o:
             self.parse_lexerCommands(_o[0])
-        return v
+        return ('seq', v)
 
     def parse_lexerCommands(self, obj):
         '''

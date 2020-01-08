@@ -27,7 +27,9 @@ def convert_token(jt, g):
 
 def convert_rule(jr, g):
     tokens = []
-    for tok in jr:
+    seq = jr[0]
+    assert seq == 'seq'
+    for tok in jr[1]:
         t = convert_token(tok, g)
         if t is not None:
             tokens.append(t)
@@ -120,8 +122,12 @@ def process_re(regex, jval):
     if isinstance(regex, str): return regex
     s = regex
     l = len(regex)
-    if s[0] == 'action': return None
+    if s[0] == 'action':
+        # antlr parse actions are ignored as they are in
+        # specific programming languages.
+        return None
     if l < 2 or l > 2:
+        assert False
         s = process_SEQ(regex, jval)
     else:
         op, val = regex
@@ -144,6 +150,7 @@ def process_re(regex, jval):
             #v = codecs.escape_decode(bytes(mystring, "utf-8"))[0].decode("utf-8")
             s = process_sqbr(v, jval)
         else:
+            assert False
             # this is a seq.
             s = process_SEQ(regex, jval)
     return s
