@@ -1,5 +1,7 @@
 export PYTHONPATH=build
 
+all: build/JSON.fbjson
+
 show: build/JSON.fbjson
 	python3 src/show.py build/JSON.fbjson
 

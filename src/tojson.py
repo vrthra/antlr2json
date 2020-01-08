@@ -1,3 +1,4 @@
+import codecs
 from antlr4 import *
 from ANTLRv4Lexer import ANTLRv4Lexer
 from ANTLRv4Parser import ANTLRv4Parser
@@ -955,6 +956,8 @@ import json
 def main():
     with open(sys.argv[1], 'r') as f:
         code = f.read()
+        # code = codecs.escape_decode(bytes(mystring, "utf-8"))[0].decode("utf-8")
+        # code = bytes(mystring, 'utf-8').decode('unicode_escape')
     ag = AntlrG(code)
     print(json.dumps(ag.toJSON()))
 if __name__ == '__main__':
