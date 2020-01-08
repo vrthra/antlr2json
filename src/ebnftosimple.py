@@ -9,36 +9,41 @@ def next_sym():
     Counter += 1
     return str(r)
 
-def convert_regex(jt):
+def convert_regex(jt, g):
+    # RE_DEFS[key] = jt
+    v = process_re(jt, g)
+    if v is None:
+        return None
     key = '<_re_%s>' % next_sym()
-    RE_DEFS[key] = jt
+    g[key] = [[v]]
     return key
 
-def convert_token(jt):
+def convert_token(jt, g):
     if isinstance(jt, str):
         v = bytes(jt, 'utf-8').decode('unicode_escape')
         return v
     else:
-        return convert_regex(jt)
+        return convert_regex(jt, g)
 
-def convert_rule(jr):
+def convert_rule(jr, g):
     tokens = []
     for tok in jr:
-        t = convert_token(tok)
-        tokens.append(t)
+        t = convert_token(tok, g)
+        if t is not None:
+            tokens.append(t)
     return tokens
 
-def convert_define(k, jd):
+def convert_define(k, jd, g):
     rules = []
     for rule in jd:
-        r = convert_rule(rule)
+        r = convert_rule(rule, g)
         rules.append(r)
     return rules
 
 def convert_grammar(jg):
     res = {}
     for k in jg:
-        v = convert_define(k, jg[k])
+        v = convert_define(k, jg[k], res)
         res[k] = v
     return res
 
@@ -115,6 +120,7 @@ def process_re(regex, jval):
     if isinstance(regex, str): return regex
     s = regex
     l = len(regex)
+    if s[0] == 'action': return None
     if l < 2 or l > 2:
         s = process_SEQ(regex, jval)
     else:
@@ -146,10 +152,10 @@ def main(arg):
         js = json.load(fp=f)
 
     jval = convert_grammar(js)
-    for k in RE_DEFS:
+    # for k in RE_DEFS:
         # return of process_re will be a token
-        v = process_re(RE_DEFS[k], jval)
-        jval[k] = [[v]]
+        # v = process_re(RE_DEFS[k], jval)
+        # jval[k] = [[v]]
 
     #for k in jval:
     #    print(k)
