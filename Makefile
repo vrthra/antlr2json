@@ -1,22 +1,24 @@
 export PYTHONPATH=build
 
-all: build/JSON.fbjson
+target=JSON
 
-show: build/JSON.fbjson
-	python3 src/show.py build/JSON.fbjson
+all: build/$(target).fbjson
 
-fuzz: build/JSON.fbjson
-	python3 src/fuzz.py build/JSON.fbjson
+show: build/$(target).fbjson
+	python3 src/show.py build/$(target).fbjson
 
-build/JSON.fbjson: build/JSON.ebnf
-	python3 src/ebnftosimple.py build/JSON.ebnf > build/JSON.fbjson_
-	cat build/JSON.fbjson_ | jq . > build/JSON.fbjson
-	rm -f build/JSON.fbjson_
+fuzz: build/$(target).fbjson
+	python3 src/fuzz.py build/$(target).fbjson
 
-build/JSON.ebnf: examples/JSON.g4 build/ANTLRv4Lexer.py build/ANTLRv4Parser.py | build
-	python3 src/tojson.py examples/JSON.g4 > build/JSON.ebnf_
-	cat build/JSON.ebnf_ | jq . > build/JSON.ebnf
-	rm -f build/JSON.ebnf_
+build/$(target).fbjson: build/$(target).ebnf
+	python3 src/ebnftosimple.py build/$(target).ebnf > build/$(target).fbjson_
+	cat build/$(target).fbjson_ | jq . > build/$(target).fbjson
+	rm -f build/$(target).fbjson_
+
+build/$(target).ebnf: examples/$(target).g4 build/ANTLRv4Lexer.py build/ANTLRv4Parser.py | build
+	python3 src/tojson.py examples/$(target).g4 > build/$(target).ebnf_
+	cat build/$(target).ebnf_ | jq . > build/$(target).ebnf
+	rm -f build/$(target).ebnf_
 
 
 build/ANTLRv4Lexer.py: src/ANTLRv4Lexer.g4 | build
@@ -36,10 +38,10 @@ D=-m pudb
 build:;mkdir -p build
 
 debug:
-	python3 $(D) tojson.py examples/JSON.g4
+	python3 $(D) tojson.py examples/$(target).g4
 
 clean:
 	rm -f build/ANTLRv4Lexer.py build/ANTLRv4Parser.py build/ANTLRv4Lexer.interp build/ANTLRv4Parser.interp build/ANTLRv4Lexer.tokens build/ANTLRv4Parser.tokens build/ANTLRv4ParserListener.py
 	rm -rf src/__pycache__/ build/__pycache__/
-	rm -rf build/JSON.ebnf
-	rm -rf build/JSON.fbjson
+	rm -rf build/$(target).ebnf
+	rm -rf build/$(target).fbjson
