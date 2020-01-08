@@ -114,7 +114,8 @@ def process_re(regex, jval):
     # return of process_re will be a token
     if isinstance(regex, str): return regex
     s = regex
-    if len(regex) < 2:
+    l = len(regex)
+    if l < 2 or l > 2:
         s = process_SEQ(regex, jval)
     else:
         op, val = regex

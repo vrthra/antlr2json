@@ -12,8 +12,9 @@ import json
 def main(arg):
     with open(arg) as f:
         g = json.load(fp=f)
+    k = list(g.keys())[0]
     for i in range(10):
-        v = unify_key(g, '<json>')
+        v = unify_key(g, k)
         print(repr(''.join(v)))
         print('------')
         print(''.join(v))
