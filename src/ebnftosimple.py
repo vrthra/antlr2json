@@ -25,20 +25,34 @@ def convert_token(jt, g):
     else:
         return convert_regex(jt, g)
 
-def convert_rule(jr, g):
+def convert_rule(jr, k, g):
     tokens = []
-    seq = jr[0]
-    assert seq == 'seq'
-    for tok in jr[1]:
-        t = convert_token(tok, g)
-        if t is not None:
-            tokens.append(t)
-    return tokens
+    kind = jr[0]
+    if kind == 'action':
+       cmd = jr[1]
+       if cmd == ['<skip>']:
+           payload = jr[2]
+           if payload[0] == 'seq':
+              for tok in payload[1]:
+                  t = convert_token(tok, g)
+                  if t is not None:
+                      tokens.append(t)
+              g['<>'] = [tokens]
+              return tokens
+           assert False
+       else:
+          assert False
+    elif kind == 'seq':
+        for tok in jr[1]:
+            t = convert_token(tok, g)
+            if t is not None:
+                tokens.append(t)
+        return tokens
 
 def convert_define(k, jd, g):
     rules = []
     for rule in jd:
-        r = convert_rule(rule, g)
+        r = convert_rule(rule, k, g)
         rules.append(r)
     return rules
 

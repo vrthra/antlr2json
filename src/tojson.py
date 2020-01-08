@@ -780,7 +780,8 @@ class AntlrG:
         v = self.parse_lexerElements(_o)
         _o, children = self._parse_question_object(cs, self.parser.LexerCommandsContext)
         if _o:
-            self.parse_lexerCommands(_o[0])
+            cmd = self.parse_lexerCommands(_o[0])
+            return ('action', cmd, ('seq', v))
         return ('seq', v)
 
     def parse_lexerCommands(self, obj):
@@ -1000,6 +1001,8 @@ def main():
         # code = codecs.escape_decode(bytes(mystring, "utf-8"))[0].decode("utf-8")
         # code = bytes(mystring, 'utf-8').decode('unicode_escape')
     ag = AntlrG(code)
+    #with open('.e', 'w+') as f:
+    #    print(ag.toStr(ag.tree), file=f)
     print(json.dumps(ag.toJSON()))
 if __name__ == '__main__':
     main()
