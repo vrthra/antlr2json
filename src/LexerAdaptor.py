@@ -17,6 +17,7 @@ class LexerAdaptor(Lexer):
     """
 
     _currentRuleType = Token.INVALID_TYPE
+    insideOptionsBlock = False
 
     def __init__(self, inp, output):
         Lexer.__init__(self, inp, output)
@@ -40,9 +41,20 @@ class LexerAdaptor(Lexer):
             self._type = self.ARGUMENT_CONTENT
 
     def handleEndAction(self):
-        self.popMode()
-        if len(self._modeStack) > 0:
+        oldMode = self._mode
+        newMode = self.popMode()
+        isActionWithinAction = len(self._modeStack) > 0 and newMode == self.Action and oldMode == newMode
+        if isActionWithinAction:
             self._type = self.ACTION_CONTENT
+
+  
+    def handleOptionsLBrace(self):
+        if self.insideOptionsBlock:
+            self._type = self.BEGIN_ACTION
+            self.pushMode(self.Action)
+        else:
+            self._type = self.LBRACE
+            self.insideOptionsBlock = True
 
     def emit(self):
         if self._type == self.ID:
