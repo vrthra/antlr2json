@@ -24,8 +24,7 @@ class AntlrG:
 
     def toJSON(self):
         v = {elt[0]: elt[1] for elt in self.res}
-        v[''] = self.res[0][0]
-        return v
+        return {'[start]':self.res[0][0], '[grammar]':v}
 
     def _parse_token(self, children, typ):
         assert isinstance(children[0], tree.Tree.TerminalNodeImpl)
@@ -1001,8 +1000,8 @@ def main():
         # code = codecs.escape_decode(bytes(mystring, "utf-8"))[0].decode("utf-8")
         # code = bytes(mystring, 'utf-8').decode('unicode_escape')
     ag = AntlrG(code)
-    #with open('.e', 'w+') as f:
-    #    print(ag.toStr(ag.tree), file=f)
-    print(json.dumps(ag.toJSON()))
+    res = ag.toJSON()
+    res['[tree]'] = ag.toStr(ag.tree)
+    print(json.dumps(res))
 if __name__ == '__main__':
     main()

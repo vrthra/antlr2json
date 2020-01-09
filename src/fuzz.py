@@ -57,9 +57,9 @@ import json
 
 def main(arg):
     with open(arg) as f:
-        g = json.load(fp=f)
-    start = g['']
-    del g['']
+        meta = json.load(fp=f)
+    start = meta['[start]']
+    g = meta['[grammar]']
     lf = LimitFuzzer(g)
     for i in range(10):
         v = lf.fuzz(key=start)
