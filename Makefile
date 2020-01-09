@@ -1,22 +1,23 @@
 export PYTHONPATH=build
+python=./bin/p
 
 target=JSON
 
 all: build/$(target).fbjson
 
 show: build/$(target).fbjson
-	python3 src/show.py build/$(target).fbjson
+	$(python) src/show.py build/$(target).fbjson
 
 fuzz: build/$(target).fbjson
-	python3 src/fuzz.py build/$(target).fbjson
+	$(python) src/fuzz.py build/$(target).fbjson
 
 build/$(target).fbjson: build/$(target).ebnf
-	python3 src/ebnftosimple.py build/$(target).ebnf > build/$(target).fbjson_
+	$(python) src/ebnftosimple.py build/$(target).ebnf > build/$(target).fbjson_
 	cat build/$(target).fbjson_ | jq . > build/$(target).fbjson
 	rm -f build/$(target).fbjson_
 
 build/$(target).ebnf: examples/$(target).g4 build/ANTLRv4Lexer.py build/ANTLRv4Parser.py | build
-	python3 src/tojson.py examples/$(target).g4 > build/$(target).ebnf_
+	$(python) src/tojson.py examples/$(target).g4 > build/$(target).ebnf_
 	cat build/$(target).ebnf_ | jq . > build/$(target).ebnf
 	rm -f build/$(target).ebnf_
 
@@ -33,12 +34,10 @@ prereq:
 	pip install wheel
 	pip install antlr4-python3-runtime
 
-D=-m pudb
-
 build:;mkdir -p build
 
 debug:
-	python3 $(D) tojson.py examples/$(target).g4
+	./bin/pudb tojson.py examples/$(target).g4
 
 clean:
 	rm -f build/ANTLRv4Lexer.py build/ANTLRv4Parser.py build/ANTLRv4Lexer.interp build/ANTLRv4Parser.interp build/ANTLRv4Lexer.tokens build/ANTLRv4Parser.tokens build/ANTLRv4ParserListener.py
