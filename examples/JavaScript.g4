@@ -28,11 +28,9 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  * OTHER DEALINGS IN THE SOFTWARE.
  */
-parser grammar JavaScriptParser;
+grammar JavaScript;
 
 options {
-    tokenVocab=JavaScriptLexer;
-    superClass=JavaScriptBaseParser;
 }
 
 program
@@ -136,7 +134,7 @@ emptyStatement
     ;
 
 expressionStatement
-    : {this.notOpenBraceAndNotFunction()}? expressionSequence eos
+    : {self.notOpenBraceAndNotFunction()}? expressionSequence eos
     ;
 
 ifStatement
@@ -149,8 +147,8 @@ iterationStatement
     | While '(' expressionSequence ')' statement                                                                        # WhileStatement
     | For '(' (expressionSequence | variableStatement)? ';' expressionSequence? ';' expressionSequence? ')' statement   # ForStatement
     | For '(' (singleExpression | variableStatement) In expressionSequence ')' statement                                # ForInStatement
-    // strange, 'of' is an identifier. and this.p("of") not work in sometime.
-    | For Await? '(' (singleExpression | variableStatement) Identifier{this.p("of")}? expressionSequence ')' statement  # ForOfStatement
+    // strange, 'of' is an identifier. and self.p("of") not work in sometime.
+    | For Await? '(' (singleExpression | variableStatement) Identifier{self.p("of")}? expressionSequence ')' statement  # ForOfStatement
     ;
 
 varModifier  // let, const - ECMAScript 6
@@ -160,19 +158,19 @@ varModifier  // let, const - ECMAScript 6
     ;
 
 continueStatement
-    : Continue ({this.notLineTerminator()}? Identifier)? eos
+    : Continue ({self.notLineTerminator()}? Identifier)? eos
     ;
 
 breakStatement
-    : Break ({this.notLineTerminator()}? Identifier)? eos
+    : Break ({self.notLineTerminator()}? Identifier)? eos
     ;
 
 returnStatement
-    : Return ({this.notLineTerminator()}? expressionSequence)? eos
+    : Return ({self.notLineTerminator()}? expressionSequence)? eos
     ;
 
 yieldStatement
-    : Yield ({this.notLineTerminator()}? expressionSequence)? eos
+    : Yield ({self.notLineTerminator()}? expressionSequence)? eos
     ;
 
 withStatement
@@ -204,7 +202,7 @@ labelledStatement
     ;
 
 throwStatement
-    : Throw {this.notLineTerminator()}? expressionSequence eos
+    : Throw {self.notLineTerminator()}? expressionSequence eos
     ;
 
 tryStatement
@@ -236,7 +234,7 @@ classTail
     ;
 
 classElement
-    : (Static | {this.n("static")}? Identifier | Async)* methodDefinition
+    : (Static | {self.n("static")}? Identifier | Async)* methodDefinition
     | emptyStatement
     | '#'? propertyName '=' singleExpression
     ;
@@ -320,8 +318,8 @@ singleExpression
     | singleExpression arguments                                            # ArgumentsExpression
     | New singleExpression arguments?                                       # NewExpression
     | New '.' Identifier                                                    # MetaExpression // new.target
-    | singleExpression {this.notLineTerminator()}? '++'                     # PostIncrementExpression
-    | singleExpression {this.notLineTerminator()}? '--'                     # PostDecreaseExpression
+    | singleExpression {self.notLineTerminator()}? '++'                     # PostIncrementExpression
+    | singleExpression {self.notLineTerminator()}? '--'                     # PostDecreaseExpression
     | Delete singleExpression                                               # DeleteExpression
     | Void singleExpression                                                 # VoidExpression
     | Typeof singleExpression                                               # TypeofExpression
@@ -485,31 +483,31 @@ keyword
     ;
 
 getter
-    : Identifier {this.p("get")}? propertyName
+    : Identifier {self.p("get")}? propertyName
     ;
 
 setter
-    : Identifier {this.p("set")}? propertyName
+    : Identifier {self.p("set")}? propertyName
     ;
 
 eos
     : SemiColon
     | EOF
-    | {this.lineTerminatorAhead()}?
-    | {this.closeBrace()}?
+    | {self.lineTerminatorAhead()}?
+    | {self.closeBrace()}?
     ;
 //----RAHUL
 
 MultiLineComment:               '/*' .*? '*/'             -> channel(HIDDEN);
 SingleLineComment:              '//' ~[\r\n\u2028\u2029]* -> channel(HIDDEN);
-RegularExpressionLiteral:       '/' RegularExpressionFirstChar RegularExpressionChar* {this.IsRegexPossible()}? '/' IdentifierPart*;
+RegularExpressionLiteral:       '/' RegularExpressionFirstChar RegularExpressionChar* {self.IsRegexPossible()}? '/' IdentifierPart*;
 
 OpenBracket:                    '[';
 CloseBracket:                   ']';
 OpenParen:                      '(';
 CloseParen:                     ')';
-OpenBrace:                      '{' {this.ProcessOpenBrace();};
-CloseBrace:                     '}' {this.ProcessCloseBrace();};
+OpenBrace:                      '{' {self.ProcessOpenBrace();};
+CloseBrace:                     '}' {self.ProcessCloseBrace();};
 SemiColon:                      ';';
 Comma:                          ',';
 Assign:                         '=';
@@ -578,7 +576,7 @@ DecimalLiteral:                 DecimalIntegerLiteral '.' [0-9] [0-9_]* Exponent
 /// Numeric Literals
 
 HexIntegerLiteral:              '0' [xX] [0-9a-fA-F] HexDigit*;
-OctalIntegerLiteral:            '0' [0-7]+ {!this.IsStrictMode()}?;
+OctalIntegerLiteral:            '0' [0-7]+ {not self.IsStrictMode()}?;
 OctalIntegerLiteral2:           '0' [oO] [0-7] [_0-7]*;
 BinaryIntegerLiteral:           '0' [bB] [01] [_01]*;
 
@@ -634,22 +632,22 @@ Await:                          'await';
 /// The following tokens are also considered to be FutureReservedWords
 /// when parsing strict mode
 
-Implements:                     'implements' {this.IsStrictMode()}?;
-Let:                            'let' {this.IsStrictMode()}?;
-Private:                        'private' {this.IsStrictMode()}?;
-Public:                         'public' {this.IsStrictMode()}?;
-Interface:                      'interface' {this.IsStrictMode()}?;
-Package:                        'package' {this.IsStrictMode()}?;
-Protected:                      'protected' {this.IsStrictMode()}?;
-Static:                         'static' {this.IsStrictMode()}?;
-Yield:                          'yield' {this.IsStrictMode()}?;
+Implements:                     'implements' {self.IsStrictMode()}?;
+Let:                            'let' {self.IsStrictMode()}?;
+Private:                        'private' {self.IsStrictMode()}?;
+Public:                         'public' {self.IsStrictMode()}?;
+Interface:                      'interface' {self.IsStrictMode()}?;
+Package:                        'package' {self.IsStrictMode()}?;
+Protected:                      'protected' {self.IsStrictMode()}?;
+Static:                         'static' {self.IsStrictMode()}?;
+Yield:                          'yield' {self.IsStrictMode()}?;
 
 /// Identifier Names and Identifiers
 
 Identifier:                     IdentifierStart IdentifierPart*;
 /// String Literals
 StringLiteral:                 ('"' DoubleStringCharacter* '"'
-             |                  '\'' SingleStringCharacter* '\'') {this.ProcessStringLiteral();}
+             |                  '\'' SingleStringCharacter* '\'') {self.ProcessStringLiteral();}
              ;
 
 // TODO: `${`tmp`}`
