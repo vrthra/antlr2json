@@ -1,7 +1,7 @@
 import codecs
 from antlr4 import *
-from ANTLRv4Lexer import ANTLRv4Lexer
-from ANTLRv4Parser import ANTLRv4Parser
+from ANTLRv4Lexer import ANTLRv4Lexer as MyLexer
+from ANTLRv4Parser import ANTLRv4Parser as MyParser
 import sys
 import copy
 
@@ -10,10 +10,10 @@ def warn(v):
 
 class AntlrG:
     def __init__(self, code):
-        self.lexer = ANTLRv4Lexer(InputStream(code))
+        self.lexer = MyLexer(InputStream(code))
 
         tokenStream = CommonTokenStream(self.lexer)
-        self.parser = ANTLRv4Parser(tokenStream)
+        self.parser = MyParser(tokenStream)
         self.parser.buildParseTrees = True
 
         self.tree = self.parser.grammarSpec() # entry
