@@ -29,7 +29,7 @@ def convert_rule(jr, k, g):
     kind = jr[0]
     if kind == 'action':
        cmd = jr[1]
-       if cmd == ['<skip>']:
+       if cmd == ['<skip>'] or cmd == [['<channel>', '<HIDDEN>']]:
            payload = jr[2]
            if payload[0] == 'seq':
               for tok in payload[1]:
@@ -65,18 +65,21 @@ def convert_grammar(jg):
 def process_plus(regex, jval, k):
     sym = '<_%s_PLUS_%s>' % (k, next_sym())
     res = process_re(regex, jval, k)
+    assert res is not None
     jval[sym] = [[res, sym], [res]]
     return sym
 
 def process_star(regex, jval, k):
     sym = '<_%s_STAR_%s>' % (k, next_sym())
     res = process_re(regex, jval, k)
+    assert res is not None
     jval[sym] = [[res, sym], []]
     return sym
 
 def process_q(regex, jval, k):
     sym = '<_%s_Q_%s>' % (k, next_sym())
     res = process_re(regex, jval, k)
+    assert res is not None
     jval[sym] = [[res], []]
     return sym
 
@@ -89,7 +92,12 @@ def process_dot(values, jval, k):
 
 def process_OR(values, jval, k):
     sym = '<_%s_OR_%s>' % (k, next_sym())
-    jval[sym] = [[process_re(v, jval, k)] for v in values]
+    resl = []
+    for v in values:
+        res = process_re(v, jval, k)
+        assert res is not None
+        resl.append(res)
+    jval[sym] = resl
     return sym
 
 def process_NOT(regex, jval, k):
@@ -106,8 +114,12 @@ def process_NOT(regex, jval, k):
 
 def process_SEQ(regex, jval, k):
     sym = '<_%s_SEQ_%s>' % (k, next_sym())
-    res = [process_re(e, jval, k) for e in regex]
-    jval[sym] = [res]
+    resl = []
+    for e in regex:
+        res = process_re(e, jval, k)
+        if res is not None: # res is None when it is an action
+            resl.append(res)
+    jval[sym] = [resl]
     return sym
 
 def process_sqbr(val, jval, k):
@@ -247,6 +259,7 @@ def main(arg):
     # now insert the skipped values.
     if '<>' in jval:
         jval = insert_skips(jval)
+    jval['<EOF_sp_>'] = [['<>']]
 
     print(json.dumps({'[start]': start, '[grammar]': jval}))
 
