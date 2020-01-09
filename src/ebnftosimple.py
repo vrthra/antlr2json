@@ -101,6 +101,13 @@ def process_OR(values, jval, k):
     return sym
 
 def process_NOT(regex, jval, k):
+    if len(regex) == 1:
+        sym = '<_%s_CNOT0_%s>' % (k, next_sym())
+        # this is a set element. so treat it like one.
+        assert len(regex) == 1
+        jval[sym] = [[v] for v in string.printable if v != regex[0]]
+        return sym
+
     op, val = regex
     assert op == 'charset'
     chars = process_CHARSET(val, jval, k)
