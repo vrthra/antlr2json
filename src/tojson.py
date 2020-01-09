@@ -263,12 +263,10 @@ class AntlrG:
         # a define with multiple rules
         def pred_inside(children):
             _o, children = self._parse_question_token(children, self.lexer.OR)
-            if _o is None: return None
-            _o, children = self._parse_object(children, self.parser.LabeledAltContext)
-
-            # labeledAlt can be empty TODO.
-            assert _o is not None
-            return _o, children
+            if not _o: return None, children
+            _o, children = self._parse_question_object(children, self.parser.LabeledAltContext)
+            if not _o: return None, children
+            return _o[0], children
 
         children = copy.copy(ral.children)
         o = children.pop(0)
@@ -291,10 +289,10 @@ class AntlrG:
         # a single production rule
         def pred_inside(children):
             _o, children = self._parse_question_token(children, self.lexer.POUND)
-            if _o is None: return None
-            _o, children = self._parse_object(children, self.parser.IdentifierContext)
-            assert _o is not None
-            return _o, children
+            if not _o: return None, children
+            _o, children = self._parse_question_object(children, self.parser.IdentifierContext)
+            if not _o: return None, children
+            return _o[0], children
 
         children = obj.children
         ac, children = self._parse_object(children, self.parser.AlternativeContext)
@@ -303,6 +301,30 @@ class AntlrG:
         res, children = self._parse_question_x(children, pred_inside)
 
         return acr
+
+    def parse_elementOptions(self, obj):
+        '''
+        elementOptions
+           : LT elementOption (COMMA elementOption)* GT
+           ;
+        '''
+        children = copy.copy(obj.children)
+        _o, children = self._parse_token(children, self.lexer.LT)
+
+
+        # a single production rule
+        def pred_inside(children):
+            _o, children = self._parse_question_token(children, self.lexer.COMMA)
+            if not _o: return None, children
+            _o, children = self._parse_question_object(children, self.parser.ElementOptionContext)
+            if not _o: return None, children
+            return _o[0], children
+
+        eo, children = self._parse_object(children, self.parser.ElementOptionContext)
+        res, children = self._parse_star_x(children, pred_inside)
+        lst = [eo] + res
+        _o, children = self._parse_token(children, self.lexer.GT)
+        return lst
 
 
     def parse_alternative(self, obj):
@@ -318,7 +340,9 @@ class AntlrG:
         if not children:
             return []
         _o, children = self._parse_question_object(children, self.parser.ElementOptionsContext)
-        assert not _o
+        eo = None
+        if _o:
+            eo = self.parse_elementOptions(_o[0])
         elts, children = self._parse_star_object(children, self.parser.ElementContext)
         assert len(elts) >= 1 # element+
         res = []
@@ -521,10 +545,10 @@ class AntlrG:
         # a single production rule
         def pred_inside(children):
             _o, children = self._parse_question_token(children, self.lexer.OR)
-            if _o is None: return None
-            _o, children = self._parse_object(children, self.parser.AlternativeContext)
-            assert _o is not None
-            return _o, children
+            if not _o: return None, children
+            _o, children = self._parse_question_object(children, self.parser.AlternativeContext)
+            if not _o: return None, children
+            return _o[0], children
 
         alts, children = self._parse_star_x(children, pred_inside)
         altlst = [alt]  + alts
@@ -748,10 +772,10 @@ class AntlrG:
         # a define with multiple rules
         def pred_inside(children):
             _o, children = self._parse_question_token(children, self.lexer.OR)
-            if _o is None: return None
-            _o, children = self._parse_object(children, self.parser.LexerAltContext)
-            assert _o is not None
-            return _o, children
+            if not _o: return None, children
+            _o, children = self._parse_question_object(children, self.parser.LexerAltContext)
+            if not _o: return None, children
+            return _o[0], children
 
         children = copy.copy(obj.children)
         o = children.pop(0)
@@ -792,11 +816,11 @@ class AntlrG:
         # a single production rule
         def pred_inside(children):
             _o, children = self._parse_question_token(children, self.lexer.COMMA)
-            if _o is None: return None
+            if not _o: return None, children
             self.parse_COMMA(_o[0])
-            _o, children = self._parse_object(children, self.parser.LexerCommandContext)
-            assert _o is not None
-            return _o
+            _o, children = self._parse_question_object(children, self.parser.LexerCommandContext)
+            if not _o: return None, children
+            return _o[0], children
 
         children = copy.copy(obj.children)
         _o, children = self._parse_token(children, self.lexer.RARROW)
