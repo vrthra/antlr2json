@@ -1,7 +1,7 @@
 export PYTHONPATH=build
 python=./bin/p
 
-target=JSON
+target=JavaScript
 
 all: build/$(target).fbjson
 
@@ -40,8 +40,8 @@ build/%Parser.py: examples/%.g4
 build/%Lexer.py: examples/%.g4
 	java -Xmx500M -cp ../antlr-4.7.2-complete.jar org.antlr.v4.Tool -Xexact-output-dir -o build -Dlanguage=Python3 examples/$*.g4
 
-parse:
-	./p src/fbparse.py build/JavaScript.fbjson examples/rhino.385.js
+parse: build/JavaScriptLexer.py build/JavaScript.fbjson
+	./bin/p src/fbparse.py build/JavaScript.fbjson examples/rhino.385.js
 
 build:;mkdir -p build
 
