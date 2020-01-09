@@ -134,6 +134,10 @@ emptyStatement
     ;
 
 expressionStatement
+    : expressionSequence eos
+    ;
+
+expressionStatement_todo
     : {self.notOpenBraceAndNotFunction()}? expressionSequence eos
     ;
 
@@ -483,18 +487,17 @@ keyword
     ;
 
 getter
-    : Identifier {self.p("get")}? propertyName
+    : Identifier propertyName
     ;
 
 setter
-    : Identifier {self.p("set")}? propertyName
+    : Identifier propertyName
     ;
 
 eos
     : SemiColon
     | EOF
-    | {self.lineTerminatorAhead()}?
-    | {self.closeBrace()}?
+    | CloseBrace?
     ;
 //----RAHUL
 
@@ -506,8 +509,8 @@ OpenBracket:                    '[';
 CloseBracket:                   ']';
 OpenParen:                      '(';
 CloseParen:                     ')';
-OpenBrace:                      '{' {self.ProcessOpenBrace();};
-CloseBrace:                     '}' {self.ProcessCloseBrace();};
+OpenBrace:                      '{';
+CloseBrace:                     '}';
 SemiColon:                      ';';
 Comma:                          ',';
 Assign:                         '=';
@@ -653,9 +656,9 @@ StringLiteral:                 ('"' DoubleStringCharacter* '"'
 // TODO: `${`tmp`}`
 TemplateStringLiteral:          '`' ('\\`' | ~'`')* '`';
 
-WhiteSpaces:                    [\t\u000B\u000C\u0020\u00A0]+ -> channel(HIDDEN);
-
 LineTerminator:                 [\r\n\u2028\u2029] -> channel(HIDDEN);
+
+WhiteSpaces:                    [\t\u000B\u000C\u0020\u00A0]* -> channel(HIDDEN);
 
 /// Comments
 
