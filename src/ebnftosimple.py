@@ -214,15 +214,6 @@ def process_re(regex, jval, k):
             s = process_SEQ(regex, jval, k)
     return s
 
-def insert_skip_in_rule(rule_):
-    # before ach Lexer token, insert '<>'
-    tokens = []
-    for t in rule_:
-        if len(t) > 1 and t[0] == '<' and t[1].isupper():
-            tokens.append('<>')
-        tokens.append(t)
-    return tokens
-
 def add_sp_to_define(rules):
     nrs = []
     for r in rules:
@@ -283,6 +274,8 @@ def main(arg):
     # now insert the skipped values.
     if '<>' in jval:
         jval = insert_skips(jval)
+        jval['<>'].append(['<>','<>']) # zero or more
+        jval['<>'].append([]) # zero or more
     jval['<EOF_sp_>'] = [['<>']]
 
     print(json.dumps({'[start]': start, '[grammar]': show_grammar(jval, start_symbol=start)}))
