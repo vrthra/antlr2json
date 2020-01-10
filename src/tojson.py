@@ -947,10 +947,13 @@ class AntlrG:
             res = self.parse_actionBlock(c)
             q, children = self._parse_question_token(children, self.lexer.QUESTION)
             assert not children
-            if q is not None:
-                return res
+            if not q:
+                return ('action', res)
             else:
-                return (q, res)
+                r = q[0]
+                qv = self.parse_QUESTION(r)
+                return ('action', (qv, res))
+
         elif isinstance(c, self.parser.LexerBlockContext):
             ebnf_suffix, children = self._parse_question_object(children, self.parser.EbnfSuffixContext)
             assert not children

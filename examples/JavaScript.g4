@@ -134,10 +134,6 @@ emptyStatement
     ;
 
 expressionStatement
-    : expressionSequence eos
-    ;
-
-expressionStatement_todo
     : {self.notOpenBraceAndNotFunction()}? expressionSequence eos
     ;
 
