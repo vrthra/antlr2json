@@ -628,7 +628,9 @@ class AntlrG:
     def parse_STRING_LITERAL(self, obj):
         v = obj.symbol.text
         assert (v[0], v[-1]) == ("'","'")
-        return v[1:-1]
+        # we have removed '. So if there was an escape involved (\') then
+        # we should unescape it too.
+        return v[1:-1].replace("\\'", "'")
 
     def parse_ruleref(self, obj):
         '''
