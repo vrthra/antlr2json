@@ -113,8 +113,8 @@ def process_OR(values, jval, k):
     for v in values:
         res = process_re(v, jval, k)
         assert res is not None
-        resl.append(res)
-    jval[sym] = [resl]
+        resl.append([res])
+    jval[sym] = resl
     return sym
 
 def process_NOT(regex, jval, k):
