@@ -40,8 +40,10 @@ build/%Parser.py: examples/%.g4
 build/%Lexer.py: examples/%.g4
 	java -Xmx500M -cp ../antlr-4.7.2-complete.jar org.antlr.v4.Tool -Xexact-output-dir -o build -Dlanguage=Python3 examples/$*.g4
 
+inp=examples/rhino.385.js
+
 parse: build/JavaScriptLexer.py build/JavaScript.fbjson
-	./bin/p src/fbparse.py build/JavaScript.fbjson examples/rhino.385.js
+	./bin/p src/fbparse.py build/JavaScript.fbjson $(inp)
 
 build:;mkdir -p build
 
@@ -49,7 +51,4 @@ debug:
 	./bin/pudb tojson.py examples/$(target).g4
 
 clean:
-	rm -f build/ANTLRv4Lexer.py build/ANTLRv4Parser.py build/ANTLRv4Lexer.interp build/ANTLRv4Parser.interp build/ANTLRv4Lexer.tokens build/ANTLRv4Parser.tokens build/ANTLRv4ParserListener.py
-	rm -rf src/__pycache__/ build/__pycache__/
-	rm -rf build/$(target).ebnf
-	rm -rf build/$(target).fbjson
+	rm -rf build; mkdir -p build
