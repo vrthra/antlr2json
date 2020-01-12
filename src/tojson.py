@@ -173,7 +173,10 @@ class AntlrG:
 
     def parse_DOC_COMMENT_star(self, o): return None
 
-    def parse_modeSpec_star(self, children): return None
+    def parse_modeSpec_star(self, children):
+        # no support for modes now.
+        assert not children
+        return None
 
     def parse_grammarDecl(self, children):
         # SKIPPED
