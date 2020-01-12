@@ -270,13 +270,27 @@ def readjs(arg):
         return json.load(fp=f)
 
 import json
-def main(lexerarg, parserarg):
+
+def main_no_lex(arg)
+    with open(arg) as f:
+        js = json.load(fp=f)
+    start = js['[start]']
+    grammar = js['[grammar]']
+    return start, grammar
+
+def main_with_lex(lexerarg, parserarg):
     ljs = readjs(lexerarg)
     pjs = readjs(parserarg)
     start = pjs['[start]']
     grammar = dict(ljs['[grammar]'])
     grammar.update(**pjs['[grammar]'])
+    return start, grammar
 
+def main(args):
+    if len(args) == 1:
+        start, grammar = main_no_lex(args[1])
+    elif len(args) == 2:
+        start, grammar = main_with_lex(args[1], args[2])
     jval = convert_grammar(grammar)
     # now insert the skipped values.
     if '<>' in jval:
@@ -289,4 +303,4 @@ def main(lexerarg, parserarg):
 
 if __name__ == '__main__':
     import sys
-    main(sys.argv[1], sys.argv[2])
+    main(sys.argv)
