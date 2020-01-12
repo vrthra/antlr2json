@@ -630,6 +630,9 @@ class AntlrG:
         assert (v[0], v[-1]) == ("'","'")
         # we have removed '. So if there was an escape involved (\') then
         # we should unescape it too.
+        # we can not use ast.literal_eval here as the ALTLR4 format
+        # uses \uXXXX format to specify the unicode characters, which
+        # gets converted to the actual unicode chars during literal_eval.
         return v[1:-1].replace("\\'", "'")
 
     def parse_ruleref(self, obj):
