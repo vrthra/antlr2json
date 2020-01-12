@@ -17,7 +17,7 @@ class AntlrG:
         self.parser.buildParseTrees = True
 
         self.tree = self.parser.grammarSpec() # entry
-        self.res = self.parse_grammarSpec(self.tree)
+        self.gtype, self.gid, self.res = self.parse_grammarSpec(self.tree)
 
     def toStr(self, tree):
         return tree.toStringTree(recog=self.parser)
@@ -100,7 +100,7 @@ class AntlrG:
         self.parse_DOC_COMMENT_star(_o)
 
         _o, children = self._parse_object(children, self.parser.GrammarDeclContext)
-        self.parse_grammarDecl(_o)
+        typename, gid = self.parse_grammarDecl(_o)
 
         _o, children = self._parse_star_object(children, self.parser.PrequelConstructContext)
         self.parse_prequelConstruct_star(_o)
@@ -113,7 +113,7 @@ class AntlrG:
 
         _o, children = self._parse_token(children, self.parser.EOF)
         self.parse_EOF(_o)
-        return rules_json
+        return (typename, gid, rules_json)
 
     def parse_DOT(self, obj):
         return ('dot', obj.symbol.text)
@@ -178,14 +178,43 @@ class AntlrG:
         assert not children
         return None
 
-    def parse_grammarDecl(self, children):
+    def parse_grammarType(self, obj):
+        '''
+        grammarType
+           : (LEXER GRAMMAR | PARSER GRAMMAR | GRAMMAR)
+          ;
+        '''
+        children = copy.copy(obj.children)
+        kind = 'Both'
+        if len(children) == 2:
+            c = children.pop(0)
+            if isinstance(c, tree.Tree.TerminalNodeImpl):
+                if c.symbol.type == self.lexer.LEXER:
+                    kind = 'Lexer'
+                elif c.symbol.type == self.lexer.PARSER:
+                    kind = 'Parser'
+                else:
+                    assert False
+        _o, children = self._parse_token(children, self.lexer.GRAMMAR)
+        assert not children
+        return kind
+
+    def parse_grammarDecl(self, obj):
         # SKIPPED
         '''
         grammarDecl
            : grammarType identifier SEMI
            ;
         '''
-        return None
+        children = copy.copy(obj.children)
+        _o, children = self._parse_object(children, self.parser.GrammarTypeContext)
+        gtype = self.parse_grammarType(_o)
+        _o, children = self._parse_object(children, self.parser.IdentifierContext)
+        idname = self.parse_identifier(_o)
+        _o, children = self._parse_token(children, self.lexer.SEMI)
+        assert _o
+        assert not children
+        return (gtype, idname)
 
     def parse_rulesSpec_star(self, ruleSpec_star):
         rules_json = []
@@ -1036,6 +1065,8 @@ def main():
         # code = bytes(mystring, 'utf-8').decode('unicode_escape')
     ag = AntlrG(code)
     res = ag.toJSON()
+    res['[kind]'] = ag.gtype
+    res['[gname]'] = ag.gid
     res['[tree]'] = ag.toStr(ag.tree)
     print(json.dumps(res))
 if __name__ == '__main__':

@@ -276,11 +276,14 @@ def main_no_lex(arg):
         js = json.load(fp=f)
     start = js['[start]']
     grammar = js['[grammar]']
+    assert js['[kind]'] == 'Both'
     return start, grammar
 
 def main_with_lex(lexerarg, parserarg):
     ljs = readjs(lexerarg)
+    assert ljs['[kind]'] == 'Lexer'
     pjs = readjs(parserarg)
+    assert pjs['[kind]'] == 'Parser'
     start = pjs['[start]']
     grammar = dict(ljs['[grammar]'])
     grammar.update(**pjs['[grammar]'])
