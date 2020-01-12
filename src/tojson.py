@@ -331,6 +331,7 @@ class AntlrG:
         acr =  self.parse_alternative(ac)
         assert acr[0] == 'seq'
         res, children = self._parse_question_x(children, pred_inside)
+        assert not children
 
         return acr
 
