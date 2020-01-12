@@ -1,7 +1,7 @@
 export PYTHONPATH=build
 python=./bin/p
 
-target=JavaScript
+target=JSON
 
 all: build/$(target).fbjson
 
@@ -21,6 +21,15 @@ build/$(target).ebnf: examples/$(target).g4 build/ANTLRv4Lexer.py build/ANTLRv4P
 	cat build/$(target).ebnf_ | jq . > build/$(target).ebnf
 	rm -f build/$(target).ebnf_
 
+build/JavaScript.fbjson: build/JavaScriptLexer.ebnf  build/JavaScriptParser.ebnf
+	$(python) src/ebnftosimple.py build/JavaScriptLexer.ebnf build/JavaScriptParser.ebnf > build/JavaScript.fbjson_
+	cat build/JavaScript.fbjson_ | jq . > build/JavaScript.fbjson
+	rm -f build/JavaScript.fbjson_
+
+build/%.ebnf: examples/%.g4 build/ANTLRv4Lexer.py build/ANTLRv4Parser.py | build
+	$(python) src/tojson.py examples/$*.g4 > build/$*.ebnf_
+	cat build/$*.ebnf_ | jq . > build/$*.ebnf
+	rm -f build/$*.ebnf_
 
 build/ANTLRv4Lexer.py: src/ANTLRv4Lexer.g4 | build
 	java -Xmx500M -cp ../antlr-4.7.2-complete.jar org.antlr.v4.Tool -Xexact-output-dir -o build -Dlanguage=Python3 src/ANTLRv4Lexer.g4
@@ -42,7 +51,7 @@ build/%Lexer.py: examples/%.g4
 
 inp=examples/rhino.385.js
 
-parse: build/JavaScriptLexer.py build/JavaScript.fbjson
+parse: build/JavaScript.fbjson
 	./bin/p src/fbparse.py build/JavaScript.fbjson $(inp)
 
 build:;mkdir -p build
