@@ -56,6 +56,8 @@ def convert_rule(jr, k, g):
               g.setdefault('<>', []).append([k])
               return tokens
            assert False
+       elif cmd == [['<channel>', '<ERROR>']]:
+           return None
        else:
           assert False
     elif kind == 'seq':
@@ -69,7 +71,8 @@ def convert_define(k, jd, g):
     rules = []
     for rule in jd:
         r = convert_rule(rule, k, g)
-        rules.append(r)
+        if r is not None:
+            rules.append(r)
     return rules
 
 def convert_grammar(jg):
@@ -262,14 +265,32 @@ def insert_skips(g):
         g['<%s_sp_>' % t[1:-1]] = [['<>', t]]
     return g
 
+def readjs(arg):
+    with open(arg) as f:
+        return json.load(fp=f)
 
-def main(arg):
-    import json
+import json
+
+def main_no_lex(arg):
     with open(arg) as f:
         js = json.load(fp=f)
     start = js['[start]']
     grammar = js['[grammar]']
+    return start, grammar
 
+def main_with_lex(lexerarg, parserarg):
+    ljs = readjs(lexerarg)
+    pjs = readjs(parserarg)
+    start = pjs['[start]']
+    grammar = dict(ljs['[grammar]'])
+    grammar.update(**pjs['[grammar]'])
+    return start, grammar
+
+def main(args):
+    if len(args) == 1:
+        start, grammar = main_no_lex(args[0])
+    elif len(args) == 2:
+        start, grammar = main_with_lex(args[0], args[1])
     jval = convert_grammar(grammar)
     # now insert the skipped values.
     if '<>' in jval:
@@ -282,4 +303,4 @@ def main(arg):
 
 if __name__ == '__main__':
     import sys
-    main(sys.argv[1])
+    main(sys.argv[1:])
