@@ -476,6 +476,7 @@ class AntlrG:
            : STRING_LITERAL RANGE STRING_LITERAL
            ;
         '''
+        children = copy.copy(obj.children)
         _o, children = self._parse_token(children, self.lexer.STRING_LITERAL)
         a = self.parse_STRING_LITERAL(_o)
         _o, children = self._parse_token(children, self.lexer.RANGE)
@@ -634,6 +635,36 @@ class AntlrG:
             v = self.parse_blockSet(c)
             return ('not', v)
         else: assert False
+
+    def parse_blockSet(self, obj):
+        '''
+        blockSet
+            : LPAREN setElement (OR setElement)* RPAREN
+            ;
+        '''
+        children = copy.copy(obj.children)
+        _o, children = self._parse_token(children, self.lexer.LPAREN)
+        _o, children = self._parse_object(children, self.parser.SetElementContext)
+
+        assert _o is not None
+        selt_children = [_o]
+
+        # a define with multiple rules
+        def pred_inside(children):
+            _o, children = self._parse_question_token(children, self.lexer.OR)
+            if not _o: return None, children
+            _o, children = self._parse_question_object(children, self.parser.SetElementContext)
+            if not _o: return None, children
+            return _o[0], children
+        cs, children = self._parse_star_x(children, pred_inside)
+        selt_children.extend(cs)
+
+        res = []
+        for c in selt_children:
+            o = self.parse_setElement(c)
+            res.append(o)
+        return res
+
 
     def parse_terminal(self, obj):
         '''
