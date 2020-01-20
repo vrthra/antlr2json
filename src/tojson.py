@@ -663,7 +663,7 @@ class AntlrG:
         for c in selt_children:
             o = self.parse_setElement(c)
             res.append(o)
-        return res
+        return ('seq', res)
 
 
     def parse_terminal(self, obj):

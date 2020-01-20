@@ -129,15 +129,19 @@ def process_NOT(regex, jval, k):
         return sym
 
     op, val = regex
-    assert op == 'charset'
-    chars = process_CHARSET(val, jval, k)
-    # what is our full set of chars?
-    our_chars = set(string.printable)
-    rest = list(our_chars - set(chars))
+    if op == 'charset':
+        chars = process_CHARSET(val, jval, k)
+        # what is our full set of chars?
+        our_chars = set(string.printable)
+        rest = list(our_chars - set(chars))
 
-    sym = '<_%s_CNOT_%s>' % (k, next_sym())
-    jval[sym] = [[i] for i in rest]
-    return sym
+        sym = '<_%s_CNOT_%s>' % (k, next_sym())
+        jval[sym] = [[i] for i in rest]
+        return sym
+    elif op == 'seq':
+        return process_SEQ(val, jval, k)
+    else:
+        assert False
 
 def process_SEQ(regex, jval, k):
     sym = '<_%s_SEQ_%s>' % (k, next_sym())
@@ -185,6 +189,8 @@ def process_re(regex, jval, k):
         # antlr parse actions are ignored as they are in
         # specific programming languages.
         return None
+    elif s[0] == 'charrange':
+        return process_range(s[1], s[2], k)
     if l < 2 or l > 2:
         assert False
         s = process_SEQ(regex, jval, k)
