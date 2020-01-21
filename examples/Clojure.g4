@@ -25,32 +25,32 @@
 
 grammar Clojure;
 
-file: form * EOF;
+cfile: form * EOF;
 
 form: literal
-    | list
+    | clist
     | vector
-    | map
+    | cmap
     | reader_macro
     ;
 
 forms: form* ;
 
-list: '(' forms ')' ;
+clist: '(' forms ')' ;
 
 vector: '[' forms ']' ;
 
-map: '{' (form form)* '}' ;
+cmap: '{' (form form)* '}' ;
 
-set: '#{' forms '}' ;
+cset: '#{' forms '}' ;
 
 reader_macro
-    : lambda
+    : clambda
     | meta_data
     | regex
     | var_quote
     | host_expr
-    | set
+    | cset
     | tag
     | discard
     | dispatch
@@ -91,12 +91,12 @@ gensym
     : SYMBOL '#'
     ;
 
-lambda
+clambda
     : '#(' form* ')'
     ;
 
 meta_data
-    : '#^' (map form | form)
+    : '#^' (cmap form | form)
     ;
 
 var_quote
@@ -131,13 +131,13 @@ literal
     ;
 
 string: STRING;
-hex: HEX;
-bin: BIN;
+chex: HEX;
+cbin: BIN;
 bign: BIGN;
 number
     : FLOAT
-    | hex
-    | bin
+    | chex
+    | cbin
     | bign
     | LONG
     ;
