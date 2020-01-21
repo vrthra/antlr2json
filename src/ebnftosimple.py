@@ -129,17 +129,36 @@ def process_NOT(regex, jval, k):
         return sym
 
     op, val = regex
+    our_chars = set(string.printable)
     if op == 'charset':
         chars = process_CHARSET(val, jval, k)
         # what is our full set of chars?
-        our_chars = set(string.printable)
-        rest = list(our_chars - set(chars))
+        rest = sorted(list(our_chars - set(chars)))
 
         sym = '<_%s_CNOT_%s>' % (k, next_sym())
         jval[sym] = [[i] for i in rest]
         return sym
     elif op == 'seq':
-        return process_SEQ(val, jval, k)
+        chars = []
+        for e in val:
+            if e[0] == 'charrange':
+                x, a, b = e
+                s = set(chr(c) for c in range(ord(a), ord(b)+1))
+                chars.extend(list(s))
+            elif e[0] == 'charset':
+                v = bytes(e[1][1:-1], 'utf-8').decode('unicode_escape')
+                vals = process_CHARSET(v, jval, k)
+                chars.extend(vals)
+            elif len(e) == 1 and isinstance(e, str):
+                chars.append(e)
+            else:
+                assert False
+        rest = sorted(list(our_chars - set(chars)))
+
+        sym = '<_%s_CNOT_%s>' % (k, next_sym())
+        jval[sym] = [[i] for i in rest]
+        return sym
+        #return process_SEQ(val, jval, k)
     else:
         assert False
 
@@ -180,6 +199,14 @@ def process_chars(chars, k):
 def process_range(a, b, k):
     return ''.join([chr(c) for c in range(ord(a), ord(b)+1)])
 
+def process_CHARRANGE(regex, jval, k):
+    x, a, b = regex
+    assert x == 'charrange'
+    sym = '<_%s_CHARRANGE_%s>' % (k, next_sym())
+    s = set(chr(c) for c in range(ord(a), ord(b)+1))
+    jval[sym] = [[i] for i in s]
+    return sym
+
 def process_re(regex, jval, k):
     # return of process_re will be a token
     if isinstance(regex, str): return regex
@@ -190,7 +217,8 @@ def process_re(regex, jval, k):
         # specific programming languages.
         return None
     elif s[0] == 'charrange':
-        return process_range(s[1], s[2], k)
+        s = process_CHARRANGE(regex, jval, k)
+        return s 
     if l < 2 or l > 2:
         assert False
         s = process_SEQ(regex, jval, k)
