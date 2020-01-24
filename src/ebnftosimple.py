@@ -41,6 +41,8 @@ def convert_token(jt, g, k):
     else:
         return convert_regex(jt, g, k[1:-1])
 
+SKIP = '<_SKIP>'
+
 def convert_rule(jr, k, g):
     tokens = []
     kind = jr[0]
@@ -53,7 +55,7 @@ def convert_rule(jr, k, g):
                   t = convert_token(tok, g, k)
                   if t is not None:
                       tokens.append(t)
-              g.setdefault('<>', []).append([k])
+              g.setdefault(SKIP, []).append([k])
               return tokens
            assert False
        elif cmd == [['<channel>', '<ERROR>']]:
@@ -257,7 +259,7 @@ def add_sp_to_define(rules):
         nr = []
         for t in r:
             if (t[0], t[-1]) != ('<', '>'): # terminal
-                nr.append('<>')
+                nr.append(SKIP)
                 nr.append(t)
             else:
                 if not t[1].isupper(): # parser
@@ -296,7 +298,7 @@ def insert_skips(g):
     lexers = [k for k in g if k[1].isupper()]
     g = replace_lexer(g)
     for t in lexers:
-        g['<%s_sp_>' % t[1:-1]] = [['<>', t]]
+        g['<%s_sp_>' % t[1:-1]] = [[SKIP, t]]
     return g
 
 def readjs(arg):
@@ -330,11 +332,11 @@ def main(args):
         start, grammar = main_with_lex(args[0], args[1])
     jval = convert_grammar(grammar)
     # now insert the skipped values.
-    if '<>' in jval:
+    if SKIP in jval:
         jval = insert_skips(jval)
-        jval['<>'].append(['<>','<>']) # zero or more
-        jval['<>'].append([]) # zero or more
-    jval['<EOF_sp_>'] = [['<>']]
+        jval[SKIP].append([SKIP,SKIP]) # zero or more
+        jval[SKIP].append([]) # zero or more
+    jval['<EOF_sp_>'] = [[SKIP]]
 
     print(json.dumps({'[start]': start, '[grammar]': show_grammar(jval, start_symbol=start)}))
 
