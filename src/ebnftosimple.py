@@ -7,6 +7,7 @@ def recurse_grammar(grammar, key, order):
     old_len = len(order)
     for rule in rules:
         for token in rule:
+            assert '<EOF>' != token
             if token.startswith('<') and token.endswith('>'):
                 if token not in order:
                     order.append(token)
@@ -116,7 +117,10 @@ def process_OR(values, jval, k):
     sym = '<_%s_OR_%s>' % (k, next_sym())
     resl = []
     for v in values:
-        res = process_re(v, jval, k)
+        if v:
+            res = process_re(v, jval, k)
+        else:
+            res = ''
         assert res is not None
         resl.append([res])
     jval[sym] = resl
@@ -153,6 +157,9 @@ def process_NOT(regex, jval, k):
                 chars.extend(vals)
             elif len(e) == 1 and isinstance(e, str):
                 chars.append(e)
+            elif e[0] == '\\':
+                v = bytes(e, 'utf-8').decode('unicode_escape')
+                chars.append(v)
             else:
                 assert False
         rest = sorted(list(our_chars - set(chars)))
@@ -253,6 +260,26 @@ def process_re(regex, jval, k):
             s = process_SEQ(regex, jval, k)
     return s
 
+def skip_sp(t):
+    return '<_%s_sp_>' % t[1:-1]
+
+def sp_tokens(rules):
+    nrs = []
+    for r in rules:
+        nr = []
+        for t in r:
+            if not t:
+                nr.append(t)
+            elif (t[0], t[-1]) != ('<', '>'): # terminal
+                nr.append(t)
+            else:
+                if not t[1].isupper(): # parser
+                    nr.append(t)
+                else:
+                    nr.append(skip_sp(t))
+        nrs.append(nr)
+    return nrs
+
 def add_sp_to_define(rules):
     nrs = []
     for r in rules:
@@ -265,13 +292,14 @@ def add_sp_to_define(rules):
                 if not t[1].isupper(): # parser
                     nr.append(t)
                 else:
-                    nr.append('<%s_sp_>' % t[1:-1])
+                    nr.append(skip_sp(t))
         nrs.append(nr)
     return nrs
 
 def replace_lexer(g):
     ng = {}
     for k in g:
+        #if '_LINE_COMMENT_SEQ_178' in k: assert False
         nrs = []
         # it this is already a lexical token, we don't want
         # to mess with internal stuff.
@@ -284,7 +312,7 @@ def replace_lexer(g):
             # but if the RE is part of lexer, we dont want to
             # insert.
             if k[2].isupper(): # lexer
-                nrs = g[k]
+                nrs = sp_tokens(g[k])
             else:
                 nrs = add_sp_to_define(g[k])
         else:
