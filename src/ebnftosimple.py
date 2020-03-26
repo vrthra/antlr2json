@@ -326,7 +326,8 @@ def insert_skips(g):
     lexers = [k for k in g if k[1].isupper()]
     g = replace_lexer(g)
     for t in lexers:
-        g['<%s_sp_>' % t[1:-1]] = [[SKIP, t]]
+        key = '<_%s_sp_>' % t[1:-1]
+        g[key] = [[SKIP, t]]
     return g
 
 def readjs(arg):

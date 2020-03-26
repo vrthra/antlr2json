@@ -41,7 +41,7 @@ prereq:
 	wget https://www.antlr.org/download/antlr-4.7.2-complete.jar
 	mv antlr-4.7.2-complete.jar ..
 	pip install wheel
-	pip install antlr4-python3-runtime
+	pip install antlr4-python3-runtime==4.7.2
 
 build/%Parser.py: examples/%.g4
 	java -Xmx500M -cp ../antlr-4.7.2-complete.jar org.antlr.v4.Tool -Xexact-output-dir -o build -Dlanguage=Python3 examples/$*.g4
