@@ -561,7 +561,7 @@ class AntlrG:
             return o, children
 
         res, children = self._parse_question_x(children, pred_inside)
-        assert not res
+        #assert not res # this is a question. res can be empty
         altlst, children = self._parse_object(children, self.parser.AltListContext)
         _o, children = self._parse_token(children, self.lexer.RPAREN)
         res = self.parse_altList(altlst)
