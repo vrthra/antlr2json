@@ -212,9 +212,9 @@ def process_CHARRANGE(regex, jval, k):
     x, a, b = regex
     assert x == 'charrange'
     sym = '<_%s_CHARRANGE_%s>' % (k, next_sym())
-    if a[0] == '\\':
+    if a[0] == '\\' and len(a) > 1:
         a = a.encode().decode('unicode_escape')
-    if b[0] == '\\':
+    if b[0] == '\\' and len(b) > 1:
         b = b.encode().decode('unicode_escape')
     s = set(chr(c) for c in range(ord(a), ord(b)+1))
     jval[sym] = [[i] for i in s]
