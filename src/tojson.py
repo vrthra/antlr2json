@@ -371,7 +371,7 @@ class AntlrG:
         # a single production rule (or empty)
         children = obj.children
         if not children:
-            return []
+            return ('seq', [])
         _o, children = self._parse_question_object(children, self.parser.ElementOptionsContext)
         eo = None
         if _o:
