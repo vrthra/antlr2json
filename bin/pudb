@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-PYTHONPATH=build python3 -m pudb $@
+LC_ALL=C PYTHONPATH=build python3 -m pudb $@
