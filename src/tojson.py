@@ -406,11 +406,13 @@ class AntlrG:
                ;
             """
             le = self.parse_labeledElement(c)
+            assert len(le) == 2
+            # the first item is the name in le
             ebnf = None
             if len(children) > 1:
                 ebnf = self.parse_ebnfSuffix(children[1])
-                return (ebnf, le)
-            return le
+                return (ebnf, le[1])
+            return le[1]
         elif isinstance(c, self.parser.AtomContext):
             le = self.parse_atom(c)
             ebnf = None

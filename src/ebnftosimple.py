@@ -62,7 +62,9 @@ def convert_rule(jr, k, g):
        elif cmd == [['<channel>', '<ERROR>']]:
            return None
        else:
-          assert False
+           # e.g. [['<channel>', '<MYSQLCOMMENT>']]:
+           return None
+           #assert False
     elif kind == 'seq':
         for tok in jr[1]:
             t = convert_token(tok, g, k)
@@ -77,7 +79,8 @@ def convert_define(k, jd, g):
         if r is not None:
             rules.append(r)
     return rules
-
+import pudb
+br =pudb.set_trace
 def convert_grammar(jg):
     res = {}
     for k in jg:
@@ -369,9 +372,11 @@ def main(args):
         jval = insert_skips(jval)
         jval[SKIP].append([SKIP,SKIP]) # zero or more
         jval[SKIP].append([]) # zero or more
+    #jval['<_OPTIONAL_sp_>'] = [[SKIP]]
     jval['<EOF_sp_>'] = [[SKIP]]
+    jval['<_EOF_sp_>'] = [[SKIP]]
 
-    print(json.dumps({'[start]': start, '[grammar]': show_grammar(jval, start_symbol=start)}))
+    print(json.dumps({'[start]': start, '[grammar]': show_grammar(jval, start_symbol=start)}, indent=4))
 
 if __name__ == '__main__':
     import sys
