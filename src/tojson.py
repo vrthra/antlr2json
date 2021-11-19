@@ -400,6 +400,11 @@ class AntlrG:
         children = copy.copy(obj.children)
         c = children[0]
         if isinstance(c, self.parser.LabeledElementContext):
+            """
+            dropDatabase
+               : DROP dbFormat=(DATABASE | SCHEMA) ifExists? uid
+               ;
+            """
             le = self.parse_labeledElement(c)
             ebnf = None
             if len(children) > 1:
@@ -730,6 +735,7 @@ class AntlrG:
         if isinstance(nxt, self.parser.AtomContext):
             res = self.parse_atom(nxt)
         elif isinstance(nxt, self.parser.BlockContext):
+            """(DATABASE | SCHEMA)"""
             #assert False
             res = self.parse_block(nxt)
         else:
