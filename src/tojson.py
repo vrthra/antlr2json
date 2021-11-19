@@ -618,8 +618,10 @@ class AntlrG:
             return self.parse_notSet(c)
         else:
             assert isinstance(c, tree.Tree.TerminalNodeImpl)
-            raise NotImplemented()
-
+            if c.symbol.type == self.lexer.LEXER_CHAR_SET:
+                return self.parse_LEXER_CHAR_SET(c)
+            elif c.symbol.type == self.lexer.DOT:
+                return self.parse_DOT(c)
     def parse_notSet(self, obj):
         '''
         notSet
