@@ -14,7 +14,7 @@ def process_json(j):
                 else:
                     terminals.append(t)
     print('terminals', len(set(terminals)))
-    print('check: nonterminals' len(set(nonterminals)))
+    print('check: nonterminals', len(set(nonterminals)))
 
 with open(sys.argv[1]) as f:
     j = json.load(fp=f)
