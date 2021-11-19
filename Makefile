@@ -26,6 +26,11 @@ build/JavaScript.fbjson: build/JavaScriptLexer.ebnf  build/JavaScriptParser.ebnf
 	cat build/JavaScript.fbjson_ | jq . > build/JavaScript.fbjson
 	rm -f build/JavaScript.fbjson_
 
+build/MySql.fbjson: build/MySqlLexer.ebnf  build/MySqlParser.ebnf
+	$(python) src/ebnftosimple.py build/MySqlLexer.ebnf build/MySqlParser.ebnf > build/MySql.fbjson_
+	cat build/MySql.fbjson_ | jq . > build/MySql.fbjson
+	rm -f build/MySql.fbjson_
+
 build/%.ebnf: examples/%.g4 build/ANTLRv4Lexer.py build/ANTLRv4Parser.py | build
 	$(python) src/tojson.py examples/$*.g4 > build/$*.ebnf_
 	cat build/$*.ebnf_ | jq . > build/$*.ebnf
