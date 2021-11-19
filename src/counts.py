@@ -9,7 +9,7 @@ def process_json(j):
     for k in j:
         for r in j[k]:
             for t in r:
-                if (t[0], t[-1]) == ('<','>'):
+                if t and (t[0], t[-1]) == ('<','>'):
                     nonterminals.append(t)
                 else:
                     terminals.append(t)
